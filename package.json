@@ -22,8 +22,8 @@
 		"sveltekit"
 	],
 	"engines": {
-		"node": "24.x",
-		"pnpm": "10.x"
+		"node": ">=22",
+		"pnpm": ">=10"
 	},
 	"lint-staged": {
 		"*.{js,ts,svelte}": [

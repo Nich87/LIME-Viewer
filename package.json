@@ -21,10 +21,6 @@
 		"svelte",
 		"sveltekit"
 	],
-	"engines": {
-		"node": ">=22",
-		"pnpm": ">=10"
-	},
 	"lint-staged": {
 		"*.{js,ts,svelte}": [
 			"eslint --fix",

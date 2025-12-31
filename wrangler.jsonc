@@ -1,0 +1,9 @@
+{
+	"name": "lime-viewer",
+	"compatibility_date": "2025-12-31",
+	"assets": {
+		"directory": "./build",
+		"html_handling": "auto-trailing-slash",
+		"not_found_handling": "single-page-application"
+	}
+}

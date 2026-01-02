@@ -135,10 +135,10 @@
 
 <!-- Full screen immersive background -->
 <div
-	class="relative min-h-screen overflow-hidden bg-linear-to-br from-slate-900 via-emerald-950 to-slate-900"
+	class="fixed inset-0 overflow-x-hidden overflow-y-auto bg-linear-to-br from-slate-900 via-emerald-950 to-slate-900"
 >
 	<!-- Animated background elements -->
-	<div class="absolute inset-0 overflow-hidden">
+	<div class="pointer-events-none fixed inset-0 overflow-hidden">
 		<!-- Floating orbs -->
 		<div
 			class="animate-float-slow absolute top-20 -left-20 h-72 w-72 rounded-full bg-emerald-500/10 blur-3xl"
@@ -162,7 +162,9 @@
 	</div>
 
 	<!-- Main content -->
-	<div class="relative flex min-h-screen items-center justify-center px-4 py-8">
+	<div
+		class="relative flex min-h-full items-start justify-center px-4 py-6 sm:items-center sm:py-8"
+	>
 		<div
 			class="w-full max-w-2xl transition-all duration-700 ease-out {mounted
 				? 'translate-y-0 opacity-100'
@@ -179,10 +181,12 @@
 						<div
 							class="absolute inset-0 animate-pulse rounded-full bg-emerald-500/20 blur-xl"
 						></div>
-						<div
-							class="relative flex h-20 w-20 items-center justify-center rounded-2xl bg-linear-to-br from-emerald-400 to-green-600 shadow-lg shadow-emerald-500/30"
-						>
-							<Icon icon="mdi:message-text" class="h-10 w-10 text-white" />
+						<div class="relative h-20 w-20 overflow-hidden rounded-2xl">
+							<img
+								src="/web-app-manifest-192x192.png"
+								alt="LIME Viewer"
+								class="h-full w-full scale-105 object-cover"
+							/>
 						</div>
 					</div>
 					<h1

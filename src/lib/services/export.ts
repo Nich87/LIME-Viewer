@@ -6,6 +6,17 @@
 import type { Message, ChatRoom } from '$lib/schema';
 import { MessageType } from '$lib/schema';
 import { formatCallDuration, getGroupEventText } from '$lib/utils';
+import { LINE_STICKER_CDN } from '$lib/constants';
+
+/**
+ * Export options for customizing output
+ */
+export interface ExportOptions {
+	/** Include member ID (mid) in the output */
+	includeMid?: boolean;
+	/** Replace sticker placeholder with CDN URL */
+	stickerAsCdnUrl?: boolean;
+}
 
 // Constants
 const WEEKDAYS = ['日', '月', '火', '水', '木', '金', '土'] as const;
@@ -26,9 +37,20 @@ const MESSAGE_TYPE_TEXT_MAP: Partial<Record<MessageType, string>> = {
 } as const;
 
 /**
+ * Generate sticker CDN URL from message attachment metadata
+ */
+function getStickerCdnUrl(message: Message): string | null {
+	const stickerId = message.attachment?.metadata?.stickerId;
+	if (stickerId) {
+		return `${LINE_STICKER_CDN}/${stickerId}/android/sticker.png`;
+	}
+	return null;
+}
+
+/**
  * Get message content as plain text for export
  */
-function getMessageContentText(message: Message): string {
+function getMessageContentText(message: Message, options: ExportOptions = {}): string {
 	const { type, attachment, content } = message;
 
 	// Group event
@@ -42,6 +64,10 @@ function getMessageContentText(message: Message): string {
 
 	// Simple attachment types
 	if (type === MessageType.STICKER || attachment?.type === 'sticker') {
+		if (options.stickerAsCdnUrl) {
+			const cdnUrl = getStickerCdnUrl(message);
+			if (cdnUrl) return cdnUrl;
+		}
 		return ATTACHMENT_TEXT_MAP.sticker;
 	}
 
@@ -175,7 +201,12 @@ function getSenderName(msg: Message, selfName: string): string {
 /**
  * Process messages and format as text lines with date grouping
  */
-function formatMessagesAsTextLines(messages: Message[], selfName: string, lines: string[]): void {
+function formatMessagesAsTextLines(
+	messages: Message[],
+	selfName: string,
+	lines: string[],
+	options: ExportOptions = {}
+): void {
 	let currentDate = '';
 
 	for (const msg of messages) {
@@ -186,12 +217,17 @@ function formatMessagesAsTextLines(messages: Message[], selfName: string, lines:
 			lines.push(currentDate);
 		}
 
-		const content = getMessageContentText(msg);
+		const content = getMessageContentText(msg, options);
 		if (!content) continue;
 
 		const time = formatMessageTime(msg.timestamp);
 		const senderName = getSenderName(msg, selfName);
-		lines.push(`${time}\t${senderName}\t${content}`);
+
+		if (options.includeMid) {
+			lines.push(`${time}\t${senderName}\t${msg.fromId}\t${content}`);
+		} else {
+			lines.push(`${time}\t${senderName}\t${content}`);
+		}
 	}
 }
 
@@ -201,7 +237,8 @@ function formatMessagesAsTextLines(messages: Message[], selfName: string, lines:
 export function exportAsText(
 	chat: ChatRoom,
 	messages: Message[],
-	selfName: string = '自分'
+	selfName: string = '自分',
+	options: ExportOptions = {}
 ): string {
 	const lines: string[] = [
 		`[LINE] ${chat.name}とのトーク履歴`,
@@ -209,7 +246,7 @@ export function exportAsText(
 		''
 	];
 
-	formatMessagesAsTextLines(messages, selfName, lines);
+	formatMessagesAsTextLines(messages, selfName, lines, options);
 
 	return lines.join('\n');
 }
@@ -227,10 +264,11 @@ function escapeCSVField(value: string): string {
 function formatMessageAsCSVRow(
 	msg: Message,
 	selfName: string,
+	options: ExportOptions = {},
 	chatName?: string,
 	isGroup?: boolean
 ): string | null {
-	const content = getMessageContentText(msg);
+	const content = getMessageContentText(msg, options);
 	if (!content) return null;
 
 	const date = new Date(msg.timestamp);
@@ -241,6 +279,7 @@ function formatMessageAsCSVRow(
 		escapeCSVField(formatDateStr(date)),
 		escapeCSVField(formatMessageTime(msg.timestamp)),
 		escapeCSVField(getSenderName(msg, selfName)),
+		...(options.includeMid ? [escapeCSVField(msg.fromId)] : []),
 		escapeCSVField(content)
 	];
 
@@ -253,12 +292,16 @@ function formatMessageAsCSVRow(
 export function exportAsCSV(
 	chat: ChatRoom,
 	messages: Message[],
-	selfName: string = '自分'
+	selfName: string = '自分',
+	options: ExportOptions = {}
 ): string {
-	const lines: string[] = ['日付,時刻,送信者,メッセージ'];
+	const header = options.includeMid
+		? '日付,時刻,送信者,MID,メッセージ'
+		: '日付,時刻,送信者,メッセージ';
+	const lines: string[] = [header];
 
 	for (const msg of messages) {
-		const row = formatMessageAsCSVRow(msg, selfName);
+		const row = formatMessageAsCSVRow(msg, selfName, options);
 		if (row) lines.push(row);
 	}
 
@@ -303,7 +346,8 @@ export function generateExportFilename(chatName: string, extension: 'txt' | 'csv
 export function exportAllChatsAsText(
 	chats: ChatRoom[],
 	getMessages: (chatId: string) => Message[],
-	selfName: string = '自分'
+	selfName: string = '自分',
+	options: ExportOptions = {}
 ): string {
 	const lines: string[] = [
 		'[LINE] 全トーク履歴',
@@ -323,7 +367,7 @@ export function exportAllChatsAsText(
 			''
 		);
 
-		formatMessagesAsTextLines(messages, selfName, lines);
+		formatMessagesAsTextLines(messages, selfName, lines, options);
 		lines.push('');
 	}
 
@@ -336,15 +380,19 @@ export function exportAllChatsAsText(
 export function exportAllChatsAsCSV(
 	chats: ChatRoom[],
 	getMessages: (chatId: string) => Message[],
-	selfName: string = '自分'
+	selfName: string = '自分',
+	options: ExportOptions = {}
 ): string {
-	const lines: string[] = ['トーク名,グループ,日付,時刻,送信者,メッセージ'];
+	const header = options.includeMid
+		? 'トーク名,グループ,日付,時刻,送信者,MID,メッセージ'
+		: 'トーク名,グループ,日付,時刻,送信者,メッセージ';
+	const lines: string[] = [header];
 
 	for (const chat of chats) {
 		const messages = getMessages(chat.id);
 
 		for (const msg of messages) {
-			const row = formatMessageAsCSVRow(msg, selfName, chat.name, chat.isGroup);
+			const row = formatMessageAsCSVRow(msg, selfName, options, chat.name, chat.isGroup);
 			if (row) lines.push(row);
 		}
 	}

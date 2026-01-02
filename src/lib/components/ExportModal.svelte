@@ -5,7 +5,8 @@
 		exportAsText,
 		exportAsCSV,
 		downloadFile,
-		generateExportFilename
+		generateExportFilename,
+		type ExportOptions
 	} from '$lib/services/export';
 
 	interface Props {
@@ -18,10 +19,21 @@
 	let exporting = $state(false);
 	let exportSuccess = $state(false);
 
+	// Export options
+	let includeMid = $state(false);
+	let stickerAsCdnUrl = $state(false);
+
+	function getExportOptions(): ExportOptions {
+		return {
+			includeMid,
+			stickerAsCdnUrl
+		};
+	}
+
 	async function handleExportText() {
 		exporting = true;
 		try {
-			const content = exportAsText(chat, messages);
+			const content = exportAsText(chat, messages, '自分', getExportOptions());
 			const filename = generateExportFilename(chat.name, 'txt');
 			downloadFile(content, filename, 'text/plain');
 			exportSuccess = true;
@@ -38,7 +50,7 @@
 	async function handleExportCSV() {
 		exporting = true;
 		try {
-			const content = exportAsCSV(chat, messages);
+			const content = exportAsCSV(chat, messages, '自分', getExportOptions());
 			const filename = generateExportFilename(chat.name, 'csv');
 			downloadFile(content, filename, 'text/csv');
 			exportSuccess = true;
@@ -101,6 +113,27 @@
 					<span class="font-medium">{chat.name}</span>
 				</div>
 				<p class="mt-1 text-xs text-gray-500">{messages.length}件のメッセージ</p>
+			</div>
+
+			<!-- Export Options -->
+			<div class="mb-4 space-y-2">
+				<p class="text-sm font-medium text-gray-700">エクスポートオプション</p>
+				<label class="flex cursor-pointer items-center gap-2">
+					<input
+						type="checkbox"
+						bind:checked={includeMid}
+						class="h-4 w-4 rounded border-gray-300 text-[#06C755] focus:ring-[#06C755]"
+					/>
+					<span class="text-sm text-gray-600">MID（メンバーID）を含める</span>
+				</label>
+				<label class="flex cursor-pointer items-center gap-2">
+					<input
+						type="checkbox"
+						bind:checked={stickerAsCdnUrl}
+						class="h-4 w-4 rounded border-gray-300 text-[#06C755] focus:ring-[#06C755]"
+					/>
+					<span class="text-sm text-gray-600">スタンプをCDN URLに置換</span>
+				</label>
 			</div>
 
 			<p class="mb-4 text-sm text-gray-600">エクスポート形式を選択してください</p>

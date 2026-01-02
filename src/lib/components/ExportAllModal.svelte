@@ -6,7 +6,8 @@
 		exportAllChatsAsText,
 		exportAllChatsAsCSV,
 		downloadFile,
-		generateAllExportFilename
+		generateAllExportFilename,
+		type ExportOptions
 	} from '$lib/services/export';
 	import { databaseService } from '$lib/services';
 
@@ -20,6 +21,17 @@
 	let exportSuccess = $state(false);
 	let progress = $state(0);
 	let currentChatName = $state('');
+
+	// Export options
+	let includeMid = $state(false);
+	let stickerAsCdnUrl = $state(false);
+
+	function getExportOptions(): ExportOptions {
+		return {
+			includeMid,
+			stickerAsCdnUrl
+		};
+	}
 
 	// Cache for messages
 	const messagesCache = new SvelteMap<string, Message[]>();
@@ -50,7 +62,7 @@
 			await loadAllMessages();
 			currentChatName = 'エクスポート中...';
 
-			const content = exportAllChatsAsText(chats, getMessagesFromCache);
+			const content = exportAllChatsAsText(chats, getMessagesFromCache, '自分', getExportOptions());
 			const filename = generateAllExportFilename('txt');
 			downloadFile(content, filename, 'text/plain');
 
@@ -71,7 +83,7 @@
 			await loadAllMessages();
 			currentChatName = 'エクスポート中...';
 
-			const content = exportAllChatsAsCSV(chats, getMessagesFromCache);
+			const content = exportAllChatsAsCSV(chats, getMessagesFromCache, '自分', getExportOptions());
 			const filename = generateAllExportFilename('csv');
 			downloadFile(content, filename, 'text/csv');
 
@@ -145,6 +157,27 @@
 			</div>
 
 			{#if !exporting}
+				<!-- Export Options -->
+				<div class="mb-4 space-y-2">
+					<p class="text-sm font-medium text-gray-700">エクスポートオプション</p>
+					<label class="flex cursor-pointer items-center gap-2">
+						<input
+							type="checkbox"
+							bind:checked={includeMid}
+							class="h-4 w-4 rounded border-gray-300 text-[#06C755] focus:ring-[#06C755]"
+						/>
+						<span class="text-sm text-gray-600">MID（メンバーID）を含める</span>
+					</label>
+					<label class="flex cursor-pointer items-center gap-2">
+						<input
+							type="checkbox"
+							bind:checked={stickerAsCdnUrl}
+							class="h-4 w-4 rounded border-gray-300 text-[#06C755] focus:ring-[#06C755]"
+						/>
+						<span class="text-sm text-gray-600">スタンプをCDN URLに置換</span>
+					</label>
+				</div>
+
 				<p class="mb-4 text-sm text-gray-600">エクスポート形式を選択してください</p>
 
 				<div class="space-y-3">

@@ -8,28 +8,15 @@ export default defineConfig({
 		tailwindcss(),
 		sveltekit(),
 		SvelteKitPWA({
+			srcDir: 'src',
 			registerType: 'autoUpdate',
+			injectRegister: false,
 			manifest: false, // Using custom site.webmanifest
 			workbox: {
-				globPatterns: ['**/*.{js,css,html,ico,png,svg,woff,woff2}'],
+				globPatterns: ['**/*.{js,css,html,ico,png,svg,woff,woff2,wasm}'],
+				maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
 				navigateFallback: '/',
-				navigateFallbackDenylist: [/^\/api/],
-				runtimeCaching: [
-					{
-						urlPattern: /^https:\/\/cdn\.jsdelivr\.net\/.*/i,
-						handler: 'CacheFirst',
-						options: {
-							cacheName: 'cdn-cache',
-							expiration: {
-								maxEntries: 50,
-								maxAgeSeconds: 60 * 60 * 24 * 365 // 1 year
-							},
-							cacheableResponse: {
-								statuses: [0, 200]
-							}
-						}
-					}
-				]
+				navigateFallbackDenylist: [/^\/api/]
 			},
 			devOptions: {
 				enabled: false

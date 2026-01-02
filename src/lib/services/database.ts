@@ -10,7 +10,6 @@ import { contactsService } from './contacts';
 import { mediaService } from './media';
 import { storageService } from './storage';
 import { determineAttachment } from './messageParser';
-import { SQL_JS_CDN } from '$lib/constants';
 
 export class DatabaseError extends Error {
 	constructor(
@@ -29,8 +28,8 @@ class DatabaseService {
 
 	async initialize(dbBuffer: ArrayBuffer, persist = true): Promise<void> {
 		const SQL = await initSqlJs({
-			// Load sql.js wasm file from CDN
-			locateFile: (file: string) => `${SQL_JS_CDN}/${file}`
+			// Load local wasm placed in static/sql-wasm.wasm for offline use
+			locateFile: (file: string) => `/` + file
 		});
 
 		this.db = new SQL.Database(new Uint8Array(dbBuffer));

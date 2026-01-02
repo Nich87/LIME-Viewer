@@ -2,7 +2,7 @@
 	import { browser } from '$app/environment';
 	import Icon from '@iconify/svelte';
 	import type { ChatRoom } from '$lib/schema';
-	import ExportAllModal from './ExportAllModal.svelte';
+	import ExportAllModal from './modals/ExportAllModal.svelte';
 
 	interface Props {
 		chats?: ChatRoom[];

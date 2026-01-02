@@ -7,11 +7,11 @@
 	import MessageBubble from './MessageBubble.svelte';
 	import ImagePreview from './ImagePreview.svelte';
 	import SearchPanel from './SearchPanel.svelte';
-	import CalendarModal from './CalendarModal.svelte';
+	import CalendarModal from './modals/CalendarModal.svelte';
 	import MessageContextMenu from './MessageContextMenu.svelte';
-	import PartialCopyModal from './PartialCopyModal.svelte';
-	import ScreenshotModal from './ScreenshotModal.svelte';
-	import ExportModal from './ExportModal.svelte';
+	import PartialCopyModal from './modals/PartialCopyModal.svelte';
+	import ScreenshotModal from './modals/ScreenshotModal.svelte';
+	import ExportModal from './modals/ExportModal.svelte';
 
 	interface Props {
 		chat: ChatRoom;

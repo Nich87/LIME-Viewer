@@ -75,6 +75,7 @@
 	},
 	"dependencies": {
 		"@iconify/svelte": "^5.1.0",
+		"@iconify-json/mdi": "^1.1.68",
 		"html-to-image": "^1.11.13",
 		"jszip": "^3.10.1",
 		"sql.js": "^1.13.0"

@@ -12,6 +12,8 @@ export default defineConfig({
 			manifest: false, // Using custom site.webmanifest
 			workbox: {
 				globPatterns: ['**/*.{js,css,html,ico,png,svg,woff,woff2}'],
+				navigateFallback: '/',
+				navigateFallbackDenylist: [/^\/api/],
 				runtimeCaching: [
 					{
 						urlPattern: /^https:\/\/cdn\.jsdelivr\.net\/.*/i,

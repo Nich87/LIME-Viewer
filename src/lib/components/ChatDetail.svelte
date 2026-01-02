@@ -11,6 +11,7 @@
 	import MessageContextMenu from './MessageContextMenu.svelte';
 	import PartialCopyModal from './PartialCopyModal.svelte';
 	import ScreenshotModal from './ScreenshotModal.svelte';
+	import ExportModal from './ExportModal.svelte';
 
 	interface Props {
 		chat: ChatRoom;
@@ -52,6 +53,9 @@
 	let showScreenshotModal = $state(false);
 	let screenshotTarget: HTMLElement | null = $state(null);
 	let longPressTimer: ReturnType<typeof setTimeout> | null = null;
+
+	// Export modal state
+	let showExportModal = $state(false);
 
 	// Helper for date separators
 	function getDateString(timestamp: number): string {
@@ -500,6 +504,15 @@
 		clearSelection();
 	}
 
+	// Export functions
+	function openExportModal() {
+		showExportModal = true;
+	}
+
+	function closeExportModal() {
+		showExportModal = false;
+	}
+
 	function closeScreenshotModal() {
 		showScreenshotModal = false;
 		// Clean up dynamically created container
@@ -535,8 +548,8 @@
 			<button aria-label="検索" onclick={openSearch}>
 				<Icon icon="mdi:magnify" class="h-5 w-5" />
 			</button>
-			<button aria-label="メニュー">
-				<Icon icon="mdi:menu" class="h-5 w-5" />
+			<button aria-label="エクスポート" onclick={openExportModal} title="トーク履歴をエクスポート">
+				<Icon icon="mdi:download" class="h-5 w-5" />
 			</button>
 		</div>
 	</div>
@@ -652,4 +665,9 @@
 <!-- Screenshot Modal -->
 {#if showScreenshotModal && screenshotTarget}
 	<ScreenshotModal targetElement={screenshotTarget} onClose={closeScreenshotModal} />
+{/if}
+
+<!-- Export Modal -->
+{#if showExportModal}
+	<ExportModal {chat} {messages} onClose={closeExportModal} />
 {/if}

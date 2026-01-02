@@ -2,6 +2,7 @@
 	import { browser } from '$app/environment';
 	import Icon from '@iconify/svelte';
 	import type { ChatRoom } from '$lib/schema';
+	import ExportAllModal from './ExportAllModal.svelte';
 
 	interface Props {
 		chats?: ChatRoom[];
@@ -12,6 +13,9 @@
 	}
 
 	let { chats = [], selectedChatId = null, onselect, onReset, fullWidth = false }: Props = $props();
+
+	// Export modal state
+	let showExportModal = $state(false);
 
 	function getInitialTab(): 'all' | 'friends' | 'groups' | 'official' {
 		if (browser) {
@@ -113,16 +117,26 @@
 		<!-- Header / Search -->
 		<div class="flex items-center justify-between bg-[#7CC5E6] p-4 text-white">
 			<h1 class="text-xl font-bold">トーク</h1>
-			{#if onReset}
+			<div class="flex items-center gap-2">
 				<button
-					onclick={onReset}
+					onclick={() => (showExportModal = true)}
 					class="flex items-center gap-1 rounded-lg bg-white/20 px-2 py-1 text-sm transition-colors hover:bg-white/30"
-					title="データをリセット"
+					title="全トーク履歴をエクスポート"
 				>
-					<Icon icon="mdi:delete-outline" class="h-4 w-4" />
-					<span class="hidden sm:inline">リセット</span>
+					<Icon icon="mdi:download" class="h-4 w-4" />
+					<span class="hidden sm:inline">エクスポート</span>
 				</button>
-			{/if}
+				{#if onReset}
+					<button
+						onclick={onReset}
+						class="flex items-center gap-1 rounded-lg bg-white/20 px-2 py-1 text-sm transition-colors hover:bg-white/30"
+						title="データをリセット"
+					>
+						<Icon icon="mdi:delete-outline" class="h-4 w-4" />
+						<span class="hidden sm:inline">リセット</span>
+					</button>
+				{/if}
+			</div>
 		</div>
 
 		<!-- Tabs -->
@@ -185,3 +199,8 @@
 		{/each}
 	</div>
 </div>
+
+<!-- Export All Modal -->
+{#if showExportModal}
+	<ExportAllModal {chats} onClose={() => (showExportModal = false)} />
+{/if}

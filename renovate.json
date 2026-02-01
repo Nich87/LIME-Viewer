@@ -1,0 +1,62 @@
+{
+	"$schema": "https://docs.renovatebot.com/renovate-schema.json",
+	"extends": ["config:recommended"],
+	"timezone": "Asia/Tokyo",
+	"schedule": ["before 10am on Monday"],
+	"labels": ["dependencies"],
+	"rangeStrategy": "bump",
+	"lockFileMaintenance": {
+		"enabled": true,
+		"schedule": ["before 10am on Monday"]
+	},
+	"packageRules": [
+		{
+			"matchPackagePatterns": ["*"],
+			"matchUpdateTypes": ["minor", "patch"],
+			"groupName": "all non-major dependencies",
+			"groupSlug": "all-minor-patch",
+			"automerge": true
+		},
+		{
+			"matchDepTypes": ["devDependencies"],
+			"matchUpdateTypes": ["major"],
+			"groupName": "all major dev dependencies",
+			"groupSlug": "all-major-dev"
+		},
+		{
+			"matchPackagePatterns": ["husky"],
+			"automerge": false
+		},
+		{
+			"matchPackagePatterns": ["@sveltejs/*"],
+			"groupName": "SvelteJS packages"
+		},
+		{
+			"matchPackagePatterns": ["@tailwindcss/*", "tailwindcss", "postcss*"],
+			"groupName": "TailwindCSS packages"
+		},
+		{
+			"matchPackagePatterns": ["eslint", "eslint-*", "@typescript-eslint/*", "typescript-eslint"],
+			"groupName": "ESLint packages"
+		},
+		{
+			"matchPackagePatterns": ["prettier", "prettier-*"],
+			"groupName": "Prettier packages"
+		},
+		{
+			"matchPackagePatterns": ["@iconify/*", "@iconify-json/*"],
+			"groupName": "Iconify packages"
+		},
+		{
+			"matchPackagePatterns": ["vite", "vite-*", "@vite-pwa/*"],
+			"groupName": "Vite packages"
+		}
+	],
+	"semanticCommits": "enabled",
+	"commitMessagePrefix": "chore(deps):",
+	"prHourlyLimit": 2,
+	"prConcurrentLimit": 10,
+	"vulnerabilityAlerts": {
+		"labels": ["security"]
+	}
+}

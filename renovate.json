@@ -11,11 +11,11 @@
 	},
 	"packageRules": [
 		{
-			"matchPackagePatterns": ["*"],
 			"matchUpdateTypes": ["minor", "patch"],
 			"groupName": "all non-major dependencies",
 			"groupSlug": "all-minor-patch",
-			"automerge": true
+			"automerge": true,
+			"matchPackageNames": ["*"]
 		},
 		{
 			"matchDepTypes": ["devDependencies"],
@@ -24,32 +24,37 @@
 			"groupSlug": "all-major-dev"
 		},
 		{
-			"matchPackagePatterns": ["husky"],
-			"automerge": false
+			"automerge": false,
+			"matchPackageNames": ["/husky/"]
 		},
 		{
-			"matchPackagePatterns": ["@sveltejs/*"],
-			"groupName": "SvelteJS packages"
+			"groupName": "SvelteJS packages",
+			"matchPackageNames": ["/@sveltejs/*/"]
 		},
 		{
-			"matchPackagePatterns": ["@tailwindcss/*", "tailwindcss", "postcss*"],
-			"groupName": "TailwindCSS packages"
+			"groupName": "TailwindCSS packages",
+			"matchPackageNames": ["/@tailwindcss/*/", "/tailwindcss/", "/postcss*/"]
 		},
 		{
-			"matchPackagePatterns": ["eslint", "eslint-*", "@typescript-eslint/*", "typescript-eslint"],
-			"groupName": "ESLint packages"
+			"groupName": "ESLint packages",
+			"matchPackageNames": [
+				"/eslint/",
+				"/eslint-*/",
+				"/@typescript-eslint/*/",
+				"/typescript-eslint/"
+			]
 		},
 		{
-			"matchPackagePatterns": ["prettier", "prettier-*"],
-			"groupName": "Prettier packages"
+			"groupName": "Prettier packages",
+			"matchPackageNames": ["/prettier/", "/prettier-*/"]
 		},
 		{
-			"matchPackagePatterns": ["@iconify/*", "@iconify-json/*"],
-			"groupName": "Iconify packages"
+			"groupName": "Iconify packages",
+			"matchPackageNames": ["/@iconify/*/", "/@iconify-json/*/"]
 		},
 		{
-			"matchPackagePatterns": ["vite", "vite-*", "@vite-pwa/*"],
-			"groupName": "Vite packages"
+			"groupName": "Vite packages",
+			"matchPackageNames": ["/vite/", "/vite-*/", "/@vite-pwa/*/"]
 		}
 	],
 	"semanticCommits": "enabled",

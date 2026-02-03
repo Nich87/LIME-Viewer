@@ -74,8 +74,8 @@
 		"workbox-window": "^7.4.0"
 	},
 	"dependencies": {
-		"@iconify/svelte": "^5.1.0",
-		"@iconify-json/mdi": "^1.1.68",
+		"@iconify/svelte": "^5.2.1",
+		"@iconify-json/mdi": "^1.2.3",
 		"html-to-image": "^1.11.13",
 		"jszip": "^3.10.1",
 		"sql.js": "^1.13.0"

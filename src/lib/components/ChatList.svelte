@@ -111,6 +111,8 @@
 	class:w-full={fullWidth}
 	ontouchstart={handleTouchStart}
 	ontouchend={handleTouchEnd}
+	role="region"
+	aria-label="トーク一覧"
 >
 	<!-- Fixed Header -->
 	<div class="shrink-0">

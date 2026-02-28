@@ -275,6 +275,8 @@
 		ontouchmove={handleTouchMove}
 		ontouchend={handleTouchEnd}
 		ontouchcancel={handleTouchEnd}
+		role="group"
+		aria-label="画像プレビュー操作エリア"
 	>
 		<!-- Navigation buttons -->
 		{#if hasPrevious && onPrevious}

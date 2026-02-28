@@ -152,7 +152,9 @@
 		highlightedMessageId = null;
 	}
 
-	function openCalendar() {
+	function openCalendarFromSearch() {
+		showSearch = false;
+		highlightedMessageId = null;
 		showCalendar = true;
 	}
 
@@ -644,7 +646,7 @@
 		{messages}
 		onSearchResult={handleSearchResult}
 		onClose={closeSearch}
-		onOpenCalendar={openCalendar}
+		onOpenCalendar={openCalendarFromSearch}
 	/>
 {/if}
 

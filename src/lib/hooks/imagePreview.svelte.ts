@@ -1,3 +1,4 @@
+import { pushState } from '$app/navigation';
 import type { Message } from '$lib/schema';
 
 export interface ImageInfo {
@@ -43,7 +44,7 @@ export function createImagePreviewManager(getImageMessages: () => Message[]) {
 		currentTimestamp = message.timestamp;
 		currentIndex = idx >= 0 ? idx : 0;
 
-		history.pushState({ imagePreview: true, view: 'chat' }, '');
+		pushState('', { imagePreview: true, view: 'chat' });
 		isOpen = true;
 	}
 

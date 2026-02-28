@@ -5,7 +5,10 @@
 
 	interface Props {
 		messages: Message[];
-		onSearchResult: (messageId: number | null) => void;
+		onSearchResult: (
+			messageId: number | null,
+			context?: { resultIds: number[]; currentIndex: number } | null
+		) => void;
 		onClose: () => void;
 		onOpenCalendar: () => void;
 	}
@@ -59,7 +62,7 @@
 			searchResults = [];
 			selectedResultId = null;
 			isSearching = false;
-			onSearchResult(null);
+			onSearchResult(null, null);
 			return;
 		}
 
@@ -101,7 +104,7 @@
 				searchResults = results.sort((a, b) => b.timestamp - a.timestamp);
 				selectedResultId = null;
 				isSearching = false;
-				onSearchResult(null);
+				onSearchResult(null, null);
 			}
 		}
 
@@ -172,7 +175,10 @@
 
 	function selectSearchResult(messageId: number) {
 		selectedResultId = messageId;
-		onSearchResult(messageId);
+		const resultIds = searchResults.map((result) => result.id);
+		const currentIndex = resultIds.findIndex((id) => id === messageId);
+		onSearchResult(messageId, { resultIds, currentIndex: Math.max(currentIndex, 0) });
+		onClose();
 	}
 
 	function clearSearch() {
@@ -182,7 +188,7 @@
 		searchResults = [];
 		selectedResultId = null;
 		isSearching = false;
-		onSearchResult(null);
+		onSearchResult(null, null);
 	}
 
 	$effect(() => {

@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { tick, onMount, onDestroy } from 'svelte';
-	import { SvelteSet } from 'svelte/reactivity';
+	import { SvelteMap, SvelteSet } from 'svelte/reactivity';
 	import Icon from '@iconify/svelte';
 	import type { ChatRoom, Message } from '$lib/schema';
 	import { createImagePreviewManager } from '$lib/hooks';
@@ -43,8 +43,9 @@
 	let showSearch = $state(false);
 	let showCalendar = $state(false);
 	let highlightedMessageId: number | null = $state(null);
-	let messageElements: Map<number, HTMLElement> = $state(new Map());
-	let dateSeparatorElements: Map<number, HTMLElement> = $state(new Map()); // Key: message index
+	let searchNavigation: { resultIds: number[]; currentIndex: number } | null = $state(null);
+	let messageElements = new SvelteMap<number, HTMLElement>();
+	let dateSeparatorElements = new SvelteMap<number, HTMLElement>(); // Key: message index
 
 	// Message selection state
 	let selectedMessageIds = new SvelteSet<number>();
@@ -76,6 +77,7 @@
 		showSearch = false;
 		showCalendar = false;
 		highlightedMessageId = null;
+		searchNavigation = null;
 		clearSelection();
 	});
 
@@ -127,8 +129,59 @@
 	}
 
 	// Handle search result selection
-	function handleSearchResult(messageId: number | null) {
-		if (messageId) scrollToMessage(messageId);
+	function handleSearchResult(
+		messageId: number | null,
+		context?: { resultIds: number[]; currentIndex: number } | null
+	) {
+		if (!messageId) {
+			searchNavigation = null;
+			return;
+		}
+
+		if (context && context.resultIds.length > 0) {
+			const messageIndexById: Record<number, number> = {};
+			for (let i = 0; i < messages.length; i++) {
+				messageIndexById[messages[i].id] = i;
+			}
+
+			// Navigation order is based on chat timeline (older -> newer),
+			// not on suggestion list order.
+			const orderedResultIds = [...context.resultIds].sort((a, b) => {
+				const aIndex = messageIndexById[a] ?? Number.MAX_SAFE_INTEGER;
+				const bIndex = messageIndexById[b] ?? Number.MAX_SAFE_INTEGER;
+				return aIndex - bIndex;
+			});
+
+			const orderedCurrentIndex = orderedResultIds.findIndex((id) => id === messageId);
+			searchNavigation = {
+				resultIds: orderedResultIds,
+				currentIndex: Math.max(orderedCurrentIndex, 0)
+			};
+		}
+
+		scrollToMessage(messageId);
+	}
+
+	function navigateSearchResult(direction: 'prev' | 'next') {
+		if (!searchNavigation || searchNavigation.resultIds.length === 0) return;
+
+		const total = searchNavigation.resultIds.length;
+		const nextIndex =
+			direction === 'next'
+				? (searchNavigation.currentIndex + 1) % total
+				: (searchNavigation.currentIndex - 1 + total) % total;
+
+		searchNavigation = {
+			resultIds: searchNavigation.resultIds,
+			currentIndex: nextIndex
+		};
+
+		scrollToMessage(searchNavigation.resultIds[nextIndex]);
+	}
+
+	function openCalendarFromSearchNavigation() {
+		showSearch = false;
+		showCalendar = true;
 	}
 
 	// Handle date selection from calendar
@@ -149,7 +202,6 @@
 
 	function closeSearch() {
 		showSearch = false;
-		highlightedMessageId = null;
 	}
 
 	function openCalendarFromSearch() {
@@ -610,11 +662,45 @@
 	</div>
 
 	<!-- Input Area (Read Only) -->
-	<div class="border-t border-gray-200 bg-white p-3">
-		<div class="w-full rounded bg-gray-100 p-2 text-center text-sm text-gray-500">
-			これは読み取り専用のアーカイブです
+	{#if searchNavigation && !showSearch}
+		<div class="border-t border-[#8F6F69] bg-[#8F6F69] px-3 py-2 text-white">
+			<div class="flex items-center justify-between">
+				<div class="flex items-center gap-1">
+					<button
+						class="rounded p-2 transition-colors hover:bg-white/15"
+						onclick={() => navigateSearchResult('prev')}
+						aria-label="前の検索結果へ移動"
+					>
+						<Icon icon="mdi:chevron-up" class="h-6 w-6" />
+					</button>
+					<button
+						class="rounded p-2 transition-colors hover:bg-white/15"
+						onclick={() => navigateSearchResult('next')}
+						aria-label="次の検索結果へ移動"
+					>
+						<Icon icon="mdi:chevron-down" class="h-6 w-6" />
+					</button>
+					<span class="ml-3 text-2xl font-semibold">
+						{searchNavigation.currentIndex + 1} / {searchNavigation.resultIds.length}
+					</span>
+				</div>
+
+				<button
+					class="rounded p-2 transition-colors hover:bg-white/15"
+					onclick={openCalendarFromSearchNavigation}
+					aria-label="カレンダーで日付を選択"
+				>
+					<Icon icon="mdi:calendar" class="h-7 w-7" />
+				</button>
+			</div>
 		</div>
-	</div>
+	{:else}
+		<div class="border-t border-gray-200 bg-white p-3">
+			<div class="w-full rounded bg-gray-100 p-2 text-center text-sm text-gray-500">
+				これは読み取り専用のアーカイブです
+			</div>
+		</div>
+	{/if}
 </div>
 
 <!-- Image Preview Modal -->

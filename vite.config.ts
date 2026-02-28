@@ -23,6 +23,16 @@ export default defineConfig({
 			}
 		})
 	],
+	optimizeDeps: {
+		// @iconify/svelte exports .svelte entrypoints that must be handled by vite-plugin-svelte,
+		// not by esbuild pre-bundling.
+		exclude: [
+			'@iconify/svelte',
+			'@iconify/svelte/dist/functions.js',
+			'@iconify/svelte/dist/Icon.svelte',
+			'@iconify/svelte/dist/OfflineIcon.svelte'
+		]
+	},
 	server: {
 		host: true,
 		allowedHosts: ['localhost', '.trycloudflare.com']

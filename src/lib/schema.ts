@@ -142,3 +142,12 @@ export interface Message {
 		groupEvent?: GroupEventInfo;
 	};
 }
+
+export interface GlobalMessageSearchResult {
+	id: number;
+	chatId: string;
+	content: string;
+	timestamp: number;
+	fromId: string;
+	fromName?: string;
+}

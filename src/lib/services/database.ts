@@ -3,8 +3,8 @@
  * Handles reading and querying the LINE backup database
  */
 
-import initSqlJs, { type Database } from 'sql.js';
-import type { ChatRoom, Message } from '$lib/schema';
+import initSqlJs, { type Database, type Statement } from 'sql.js';
+import type { ChatRoom, GlobalMessageSearchResult, Message } from '$lib/schema';
 import { MessageType } from '$lib/schema';
 import { contactsService } from './contacts';
 import { mediaService } from './media';
@@ -26,10 +26,70 @@ class DatabaseService {
 	private initialized = false;
 	private dbBuffer: ArrayBuffer | null = null;
 
+	private queryRows(sql: string, params?: unknown[]): Record<string, unknown>[] {
+		if (!this.db) return [];
+
+		let statement: Statement | null = null;
+		const rows: Record<string, unknown>[] = [];
+
+		try {
+			statement = this.db.prepare(sql);
+			if (params && params.length > 0) {
+				statement.bind(params);
+			}
+
+			while (statement.step()) {
+				rows.push(statement.getAsObject());
+			}
+		} finally {
+			statement?.free();
+		}
+
+		return rows;
+	}
+
+	private toString(value: unknown, fallback = ''): string {
+		if (typeof value === 'string') return value;
+		if (typeof value === 'number' || typeof value === 'bigint') return String(value);
+		return fallback;
+	}
+
+	private toNumber(value: unknown, fallback = 0): number {
+		if (typeof value === 'number') return Number.isFinite(value) ? value : fallback;
+		if (typeof value === 'bigint') return Number(value);
+		if (typeof value === 'string') {
+			const parsed = Number(value);
+			return Number.isFinite(parsed) ? parsed : fallback;
+		}
+		return fallback;
+	}
+
+	private mapMessageRow(rowObj: Record<string, unknown>, fallbackChatId = ''): Message {
+		const fromId = this.toString(rowObj.from_mid);
+		const chatId = this.toString(rowObj.chat_id, fallbackChatId);
+		const isMe = !fromId || fromId === '';
+
+		return {
+			id: this.toNumber(rowObj.id),
+			serverId: this.toString(rowObj.server_id),
+			type: this.toNumber(rowObj.type) as MessageType,
+			attachmentType: this.toNumber(rowObj.attachement_type),
+			chatId,
+			fromId: fromId || '',
+			fromName: fromId ? contactsService.getContactName(fromId) : undefined,
+			content: rowObj.content == null ? null : this.toString(rowObj.content),
+			timestamp: this.toNumber(rowObj.created_time),
+			isMe,
+			status: this.toNumber(rowObj.status) === 3 ? 'read' : 'sent',
+			attachment: determineAttachment(rowObj, chatId)
+		};
+	}
+
 	async initialize(dbBuffer: ArrayBuffer, persist = true): Promise<void> {
 		const SQL = await initSqlJs({
-			// Load local wasm placed in static/sql-wasm.wasm for offline use
-			locateFile: (file: string) => `/` + file
+			// sql.js can request different wasm filenames depending on build/runtime.
+			// Always serve the bundled file from /static for offline use.
+			locateFile: (file: string) => (file.endsWith('.wasm') ? '/sql-wasm.wasm' : `/${file}`)
 		});
 
 		this.db = new SQL.Database(new Uint8Array(dbBuffer));
@@ -59,33 +119,37 @@ class DatabaseService {
 	async getChats(): Promise<ChatRoom[]> {
 		if (!this.db) throw new DatabaseError('Database not initialized', 'NOT_INITIALIZED');
 
-		const chatsResult = this.db.exec('SELECT * FROM chat ORDER BY last_created_time DESC');
-		if (chatsResult.length === 0) return [];
+		// NOTE: sql.js 1.14 browser build can return undefined `columns` from `exec()`.
+		// Use `prepare()+getAsObject()` for stable row shape across versions.
+		const rows = this.queryRows(`
+			SELECT chat_id, chat_name, input_text, last_message, last_created_time
+			FROM chat
+			ORDER BY last_created_time DESC
+		`);
+		if (rows.length === 0) return [];
 
-		const chats = chatsResult[0];
-		const columns = chats.columns;
-		const rows = chats.values;
-
-		const groupsResult = this.db.exec('SELECT id, name FROM groups');
 		const groupsMap = new Map<string, string>();
-		if (groupsResult.length > 0) {
-			groupsResult[0].values.forEach((row: (string | number | Uint8Array | null)[]) => {
-				groupsMap.set(row[0] as string, row[1] as string);
-			});
+		try {
+			const groupRows = this.queryRows('SELECT id, name FROM groups');
+			for (const rowObj of groupRows) {
+				const groupId = this.toString(rowObj.id);
+				if (!groupId) continue;
+				groupsMap.set(groupId, this.toString(rowObj.name, groupId));
+			}
+		} catch (error) {
+			console.warn('Failed to load groups table:', error);
 		}
 
-		const chatRooms: ChatRoom[] = rows.map((row: (string | number | Uint8Array | null)[]) => {
-			const rowObj: Record<string, unknown> = {};
-			columns.forEach((col: string, i: number) => {
-				rowObj[col] = row[i];
-			});
+		const chatRooms: ChatRoom[] = [];
+		for (const rowObj of rows) {
+			const chatId = this.toString(rowObj.chat_id);
+			if (!chatId) continue;
 
-			const chatId = rowObj.chat_id as string;
 			const isGroup = groupsMap.has(chatId);
-			let name = rowObj.chat_name as string | null;
+			let name = this.toString(rowObj.chat_name);
 
 			if (isGroup) {
-				name = groupsMap.get(chatId)!;
+				name = groupsMap.get(chatId) ?? name;
 			} else if (!name) {
 				const contactName = contactsService.getContactName(chatId);
 				if (contactName) {
@@ -95,18 +159,18 @@ class DatabaseService {
 				}
 			}
 
-			return {
+			chatRooms.push({
 				id: chatId,
 				name: name || 'Unknown',
 				memberCount: 0,
 				lastMessage:
-					(rowObj.input_text as string) || (rowObj.last_message as string) || 'No message',
-				lastMessageTime: parseInt((rowObj.last_created_time as string) || '0'),
-				unreadCount: (rowObj.unread_count as number) || 0,
+					this.toString(rowObj.input_text) || this.toString(rowObj.last_message) || 'No message',
+				lastMessageTime: this.toNumber(rowObj.last_created_time),
+				unreadCount: 0,
 				isGroup: isGroup,
 				avatarUrl: undefined
-			};
-		});
+			});
+		}
 
 		return chatRooms;
 	}
@@ -116,42 +180,59 @@ class DatabaseService {
 			throw new DatabaseError('Database not initialized', 'NOT_INITIALIZED');
 		}
 
-		const result = this.db.exec(
+		const rows = this.queryRows(
 			`SELECT * FROM chat_history WHERE chat_id = ? ORDER BY created_time DESC LIMIT ? OFFSET ?`,
 			[chatId, limit, offset]
 		);
+		if (rows.length === 0) return [];
 
-		if (result.length === 0) return [];
-
-		const columns = result[0].columns;
-		const rows = result[0].values;
-
-		const messages: Message[] = rows.map((row: (string | number | Uint8Array | null)[]) => {
-			const rowObj: Record<string, unknown> = {};
-			columns.forEach((col: string, i: number) => {
-				rowObj[col] = row[i];
-			});
-
-			const fromId = rowObj.from_mid as string | null;
-			const isMe = !fromId || fromId === '';
-
-			return {
-				id: rowObj.id as number,
-				serverId: rowObj.server_id as string,
-				type: rowObj.type as MessageType,
-				attachmentType: rowObj.attachement_type as number,
-				chatId: rowObj.chat_id as string,
-				fromId: fromId || '',
-				fromName: fromId ? contactsService.getContactName(fromId) : undefined,
-				content: rowObj.content as string | null,
-				timestamp: parseInt(rowObj.created_time as string),
-				isMe,
-				status: rowObj.status === 3 ? 'read' : 'sent',
-				attachment: determineAttachment(rowObj, chatId)
-			};
-		});
+		const messages = rows.map((rowObj) => this.mapMessageRow(rowObj, chatId));
 
 		return messages.reverse();
+	}
+
+	async getAllMessages(chatId: string): Promise<Message[]> {
+		if (!this.db) {
+			throw new DatabaseError('Database not initialized', 'NOT_INITIALIZED');
+		}
+
+		const rows = this.queryRows(
+			`SELECT * FROM chat_history WHERE chat_id = ? ORDER BY created_time ASC`,
+			[chatId]
+		);
+		if (rows.length === 0) return [];
+
+		return rows.map((rowObj) => this.mapMessageRow(rowObj, chatId));
+	}
+
+	async searchGlobalMessages(query: string, limit = 80): Promise<GlobalMessageSearchResult[]> {
+		if (!this.db) {
+			throw new DatabaseError('Database not initialized', 'NOT_INITIALIZED');
+		}
+
+		const trimmedQuery = query.trim();
+		if (!trimmedQuery) return [];
+
+		const rows = this.queryRows(
+			`SELECT id, chat_id, from_mid, content, created_time
+			 FROM chat_history
+			 WHERE content IS NOT NULL AND content != '' AND content LIKE ?
+			 ORDER BY created_time DESC
+			 LIMIT ?`,
+			[`%${trimmedQuery}%`, limit]
+		);
+
+		return rows.map((rowObj) => {
+			const fromId = this.toString(rowObj.from_mid);
+			return {
+				id: this.toNumber(rowObj.id),
+				chatId: this.toString(rowObj.chat_id),
+				content: this.toString(rowObj.content),
+				timestamp: this.toNumber(rowObj.created_time),
+				fromId: fromId || '',
+				fromName: fromId ? contactsService.getContactName(fromId) : undefined
+			};
+		});
 	}
 
 	close(): void {

@@ -1,9 +1,31 @@
 @import 'tailwindcss';
 @plugin '@tailwindcss/forms';
 @plugin '@tailwindcss/typography';
+@custom-variant dark (&:where(.dark, .dark *));
+
+:root {
+	color-scheme: light;
+}
+
+:root.dark {
+	color-scheme: dark;
+}
 
 html,
 body {
 	height: 100%;
 	overflow: hidden;
+}
+
+body {
+	background-color: #f8fafc;
+	color: #1f2937;
+	transition:
+		background-color 180ms ease,
+		color 180ms ease;
+}
+
+:root.dark body {
+	background-color: #0f172a;
+	color: #e2e8f0;
 }

@@ -394,6 +394,7 @@
 		// Create a container that clones the actual message elements
 		// Use fixed positioning within viewport but behind everything (z-index: -9999)
 		const container = document.createElement('div');
+		const isDarkTheme = document.documentElement.classList.contains('dark');
 		container.style.cssText = `
 			position: fixed;
 			left: 0;
@@ -401,7 +402,7 @@
 			z-index: -9999;
 			pointer-events: none;
 			width: ${viewport?.clientWidth || 400}px;
-			background-color: #96C2CF;
+			background-color: ${isDarkTheme ? '#1e293b' : '#96C2CF'};
 			padding: 16px;
 		`;
 
@@ -600,10 +601,10 @@
 	}
 </script>
 
-<div class="flex h-full flex-col bg-[#96C2CF]">
+<div class="flex h-full flex-col bg-[#96C2CF] dark:bg-slate-800">
 	<!-- Header (always shown, search panel is an overlay) -->
 	<div
-		class="sticky top-0 z-10 flex h-14 shrink-0 items-center justify-between bg-[#7CC5E6] px-4 shadow-sm"
+		class="sticky top-0 z-10 flex h-14 shrink-0 items-center justify-between bg-[#7CC5E6] px-4 shadow-sm dark:bg-slate-700"
 	>
 		<div class="flex items-center text-white">
 			{#if onBack}
@@ -685,7 +686,9 @@
 
 	<!-- Input Area (Read Only) -->
 	{#if searchNavigation && !showSearch}
-		<div class="border-t border-[#8F6F69] bg-[#8F6F69] px-3 py-2 text-white">
+		<div
+			class="border-t border-[#8F6F69] bg-[#8F6F69] px-3 py-2 text-white dark:border-slate-700 dark:bg-slate-900"
+		>
 			<div class="flex items-center justify-between">
 				<div class="flex items-center gap-1">
 					<button
@@ -717,8 +720,10 @@
 			</div>
 		</div>
 	{:else}
-		<div class="border-t border-gray-200 bg-white p-3">
-			<div class="w-full rounded bg-gray-100 p-2 text-center text-sm text-gray-500">
+		<div class="border-t border-gray-200 bg-white p-3 dark:border-slate-700 dark:bg-slate-900">
+			<div
+				class="w-full rounded bg-gray-100 p-2 text-center text-sm text-gray-500 dark:bg-slate-800 dark:text-slate-300"
+			>
 				これは読み取り専用のアーカイブです
 			</div>
 		</div>

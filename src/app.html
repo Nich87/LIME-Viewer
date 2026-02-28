@@ -14,6 +14,25 @@
 		<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
 		<meta name="apple-mobile-web-app-title" content="LIMEViewer" />
 		<link rel="manifest" href="/site.webmanifest" />
+		<script>
+			(() => {
+				const THEME_KEY = 'lime-viewer-theme';
+				let savedTheme = null;
+				try {
+					savedTheme = localStorage.getItem(THEME_KEY);
+				} catch {
+					savedTheme = null;
+				}
+				const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+				const isDark = savedTheme ? savedTheme === 'dark' : prefersDark;
+				document.documentElement.classList.toggle('dark', isDark);
+				document.documentElement.style.colorScheme = isDark ? 'dark' : 'light';
+				const themeColorMeta = document.querySelector('meta[name="theme-color"]');
+				if (themeColorMeta) {
+					themeColorMeta.setAttribute('content', isDark ? '#0f172a' : '#06c755');
+				}
+			})();
+		</script>
 		%sveltekit.head%
 	</head>
 	<body data-sveltekit-preload-data="hover">

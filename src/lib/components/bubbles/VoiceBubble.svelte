@@ -47,7 +47,7 @@
 			type="button"
 			class="mr-3 flex h-10 w-10 shrink-0 items-center justify-center rounded-full {isMe
 				? 'bg-green-600'
-				: 'bg-gray-200'} {voiceUrl
+				: 'bg-gray-200 dark:bg-slate-600'} {voiceUrl
 				? 'cursor-pointer hover:opacity-80'
 				: 'cursor-default opacity-50'}"
 			onclick={() => voiceUrl && togglePlayback()}
@@ -56,10 +56,13 @@
 			{#if isPlaying}
 				<Icon
 					icon="heroicons:pause-solid"
-					class="h-5 w-5 {isMe ? 'text-white' : 'text-gray-600'}"
+					class="h-5 w-5 {isMe ? 'text-white' : 'text-gray-600 dark:text-slate-200'}"
 				/>
 			{:else}
-				<Icon icon="heroicons:play-solid" class="h-5 w-5 {isMe ? 'text-white' : 'text-gray-600'}" />
+				<Icon
+					icon="heroicons:play-solid"
+					class="h-5 w-5 {isMe ? 'text-white' : 'text-gray-600 dark:text-slate-200'}"
+				/>
 			{/if}
 		</button>
 		<!-- Waveform visualization (simplified) -->
@@ -72,6 +75,6 @@
 			{/each}
 		</div>
 		<!-- Duration -->
-		<span class="ml-2 text-xs text-gray-600">{durationSec}秒</span>
+		<span class="ml-2 text-xs text-gray-600 dark:text-slate-300">{durationSec}秒</span>
 	</div>
 {/if}

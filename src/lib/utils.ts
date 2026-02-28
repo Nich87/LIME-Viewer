@@ -21,7 +21,9 @@ export function getBubbleStyle(
 	if (isMe) {
 		baseClasses.push('rounded-tr-none bg-[#B8E986] text-black');
 	} else {
-		baseClasses.push('rounded-tl-none border border-gray-100 bg-white text-black');
+		baseClasses.push(
+			'rounded-tl-none border border-gray-100 bg-white text-black dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100'
+		);
 	}
 
 	if (withPadding) baseClasses.push('px-4 py-3');
@@ -36,7 +38,9 @@ export function getBubbleStyle(
  */
 export function getMediaBubbleStyle(isMe: boolean): string {
 	const base = 'relative overflow-hidden rounded-2xl shadow-sm';
-	return isMe ? `${base} rounded-tr-none` : `${base} rounded-tl-none border border-gray-100`;
+	return isMe
+		? `${base} rounded-tr-none`
+		: `${base} rounded-tl-none border border-gray-100 dark:border-slate-600`;
 }
 
 /**

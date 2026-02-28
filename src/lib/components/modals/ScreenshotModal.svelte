@@ -32,7 +32,9 @@
 			// Use html-to-image for better flexbox support
 			// targetElement is already a styled container created by ChatDetail
 			const dataUrl = await toPng(targetElement, {
-				backgroundColor: '#96C2CF',
+				backgroundColor: document.documentElement.classList.contains('dark')
+					? '#1e293b'
+					: '#96C2CF',
 				pixelRatio: 2
 			});
 
@@ -109,30 +111,32 @@
 
 	<!-- Modal Content -->
 	<div
-		class="relative z-10 flex max-h-[90vh] w-full max-w-2xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl"
+		class="relative z-10 flex max-h-[90vh] w-full max-w-2xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl dark:bg-slate-900"
 	>
 		<!-- Header -->
-		<div class="flex items-center justify-between border-b border-gray-200 px-4 py-3">
-			<h3 class="text-lg font-bold text-gray-800">スクリーンショット</h3>
+		<div
+			class="flex items-center justify-between border-b border-gray-200 px-4 py-3 dark:border-slate-700"
+		>
+			<h3 class="text-lg font-bold text-gray-800 dark:text-slate-100">スクリーンショット</h3>
 			<button
 				type="button"
-				class="rounded-full p-1 transition-colors hover:bg-gray-100"
+				class="rounded-full p-1 transition-colors hover:bg-gray-100 dark:hover:bg-slate-800"
 				onclick={onClose}
 				aria-label="閉じる"
 			>
-				<Icon icon="mdi:close" class="h-6 w-6 text-gray-500" />
+				<Icon icon="mdi:close" class="h-6 w-6 text-gray-500 dark:text-slate-300" />
 			</button>
 		</div>
 
 		<!-- Preview Area -->
-		<div class="flex-1 overflow-auto bg-gray-100 p-4">
+		<div class="flex-1 overflow-auto bg-gray-100 p-4 dark:bg-slate-800">
 			{#if processing}
 				<div class="flex h-48 items-center justify-center">
 					<div class="flex flex-col items-center gap-3">
 						<div
 							class="h-10 w-10 animate-spin rounded-full border-4 border-gray-300 border-t-[#06C755]"
 						></div>
-						<span class="text-sm text-gray-600">生成中...</span>
+						<span class="text-sm text-gray-600 dark:text-slate-300">生成中...</span>
 					</div>
 				</div>
 			{:else if error}
@@ -142,7 +146,7 @@
 						<span class="text-sm">{error}</span>
 						<button
 							type="button"
-							class="rounded-lg bg-gray-200 px-4 py-2 text-sm text-gray-700 hover:bg-gray-300"
+							class="rounded-lg bg-gray-200 px-4 py-2 text-sm text-gray-700 hover:bg-gray-300 dark:bg-slate-700 dark:text-slate-100 dark:hover:bg-slate-600"
 							onclick={generatePreview}
 						>
 							再試行
@@ -154,14 +158,14 @@
 					<img
 						src={previewUrl}
 						alt="スクリーンショットプレビュー"
-						class="max-w-full rounded-lg border border-gray-300 shadow-md"
+						class="max-w-full rounded-lg border border-gray-300 shadow-md dark:border-slate-600"
 					/>
 				</div>
 			{/if}
 		</div>
 
 		<!-- Options -->
-		<div class="border-t border-gray-200 p-4">
+		<div class="border-t border-gray-200 p-4 dark:border-slate-700">
 			<!-- Random Name Option -->
 			<div class="mb-4">
 				<label class="flex cursor-pointer items-center gap-3">
@@ -170,18 +174,18 @@
 						class="h-5 w-5 rounded border-gray-300 text-[#06C755] focus:ring-[#06C755]"
 						bind:checked={useRandomName}
 					/>
-					<span class="text-sm text-gray-700">ランダムなファイル名を使用</span>
+					<span class="text-sm text-gray-700 dark:text-slate-200">ランダムなファイル名を使用</span>
 				</label>
 			</div>
 
 			<!-- Custom File Name -->
 			{#if !useRandomName}
 				<div class="mb-4">
-					<label class="block text-sm text-gray-600">
+					<label class="block text-sm text-gray-600 dark:text-slate-300">
 						ファイル名
 						<input
 							type="text"
-							class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-800 focus:border-[#06C755] focus:ring-1 focus:ring-[#06C755] focus:outline-none"
+							class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-800 focus:border-[#06C755] focus:ring-1 focus:ring-[#06C755] focus:outline-none dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
 							bind:value={customFileName}
 							placeholder="screenshot"
 						/>
@@ -193,7 +197,7 @@
 			<div class="flex gap-2">
 				<button
 					type="button"
-					class="flex flex-1 items-center justify-center gap-2 rounded-lg bg-gray-200 px-4 py-3 font-medium text-gray-700 transition-colors hover:bg-gray-300 disabled:opacity-50"
+					class="flex flex-1 items-center justify-center gap-2 rounded-lg bg-gray-200 px-4 py-3 font-medium text-gray-700 transition-colors hover:bg-gray-300 disabled:opacity-50 dark:bg-slate-700 dark:text-slate-100 dark:hover:bg-slate-600"
 					onclick={copyToClipboard}
 					disabled={processing || !previewUrl}
 				>

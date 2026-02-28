@@ -104,10 +104,11 @@
 		{#if !message.isMe}
 			<!-- Avatar (Left) -->
 			<div
-				class="mr-2 flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-gray-300"
+				class="mr-2 flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-gray-300 dark:bg-slate-600"
 			>
 				{#if message.fromId}
-					<span class="text-xs text-gray-600">{message.fromId.slice(0, 2)}</span>
+					<span class="text-xs text-gray-600 dark:text-slate-100">{message.fromId.slice(0, 2)}</span
+					>
 				{:else}
 					<span class="text-xs">?</span>
 				{/if}
@@ -117,7 +118,9 @@
 		<div class="flex max-w-[70%] flex-col {message.isMe ? 'items-end' : 'items-start'}">
 			<!-- Sender Name (Group only, for others) -->
 			{#if isGroup && !message.isMe}
-				<span class="mb-1 ml-1 text-xs text-gray-500">{message.fromName || 'Unknown'}</span>
+				<span class="mb-1 ml-1 text-xs text-gray-500 dark:text-slate-400"
+					>{message.fromName || 'Unknown'}</span
+				>
 			{/if}
 
 			<div class="flex items-end {message.isMe ? 'flex-row-reverse' : 'flex-row'}">
@@ -152,10 +155,12 @@
 				<div
 					class="mx-1 mb-1 flex flex-col text-[10px] text-gray-500 {message.isMe
 						? 'items-end'
-						: 'items-start'}"
+						: 'items-start'} dark:text-slate-400"
 				>
 					{#if message.isMe}
-						<span class="text-[#333]">既読 {message.status === 'read' ? '' : ''}</span>
+						<span class="text-[#333] dark:text-slate-300"
+							>既読 {message.status === 'read' ? '' : ''}</span
+						>
 					{/if}
 					<span>{formatTime(message.timestamp)}</span>
 				</div>
@@ -182,12 +187,12 @@
 
 		<!-- Modal Content -->
 		<div
-			class="relative z-10 w-full max-w-[calc(100vw-2rem)] rounded-2xl bg-white p-3 shadow-2xl sm:max-w-130 sm:p-4"
+			class="relative z-10 w-full max-w-[calc(100vw-2rem)] rounded-2xl bg-white p-3 shadow-2xl sm:max-w-130 sm:p-4 dark:bg-slate-900"
 		>
 			<!-- Close button -->
 			<button
 				type="button"
-				class="absolute -top-2 -right-2 flex h-8 w-8 cursor-pointer items-center justify-center rounded-full border-0 bg-gray-800 text-white shadow-lg transition-colors hover:bg-gray-700 sm:-top-3 sm:-right-3"
+				class="absolute -top-2 -right-2 flex h-8 w-8 cursor-pointer items-center justify-center rounded-full border-0 bg-gray-800 text-white shadow-lg transition-colors hover:bg-gray-700 sm:-top-3 sm:-right-3 dark:bg-slate-700 dark:hover:bg-slate-600"
 				onclick={closeMusicModal}
 				aria-label="閉じる"
 			>

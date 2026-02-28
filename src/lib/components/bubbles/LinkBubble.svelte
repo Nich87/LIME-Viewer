@@ -13,7 +13,7 @@
 	const link = $derived(message.attachment?.link);
 
 	const bubbleClass = $derived(
-		`${getMediaBubbleStyle(isMe)} ${isMe ? 'bg-[#B8E986]' : 'bg-white'}`
+		`${getMediaBubbleStyle(isMe)} ${isMe ? 'bg-[#B8E986]' : 'bg-white dark:bg-slate-700'}`
 	);
 </script>
 
@@ -26,7 +26,9 @@
 			href={link.url}
 			target="_blank"
 			rel="noopener external"
-			class="block border-t {isMe ? 'border-green-300 bg-green-50' : 'border-gray-100 bg-gray-50'}"
+			class="block border-t {isMe
+				? 'border-green-300 bg-green-50'
+				: 'border-gray-100 bg-gray-50 dark:border-slate-600 dark:bg-slate-800'}"
 		>
 			<div class="flex items-center px-3 py-2">
 				<div class="mr-2 flex h-8 w-8 shrink-0 items-center justify-center rounded bg-blue-100">

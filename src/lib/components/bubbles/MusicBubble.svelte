@@ -15,7 +15,9 @@
 
 	const bubbleClass = $derived(
 		`${BUBBLE_BASE_STYLE} cursor-pointer overflow-hidden border-0 p-0 text-left transition-transform hover:scale-[1.02] ` +
-			(isMe ? 'rounded-tr-none bg-[#B8E986]' : 'rounded-tl-none border border-gray-100 bg-white')
+			(isMe
+				? 'rounded-tr-none bg-[#B8E986]'
+				: 'rounded-tl-none border border-gray-100 bg-white dark:border-slate-600 dark:bg-slate-700')
 	);
 </script>
 
@@ -43,12 +45,16 @@
 				{/if}
 			</div>
 			<div class="flex flex-1 flex-col overflow-hidden">
-				<span class="truncate text-sm font-medium text-gray-900">{music.title}</span>
+				<span class="truncate text-sm font-medium text-gray-900 dark:text-slate-100"
+					>{music.title}</span
+				>
 				{#if music.artist}
-					<span class="truncate text-xs text-gray-500">{music.artist}</span>
+					<span class="truncate text-xs text-gray-500 dark:text-slate-400">{music.artist}</span>
 				{/if}
 				{#if music.duration}
-					<span class="text-xs text-gray-400">{formatDuration(music.duration)}</span>
+					<span class="text-xs text-gray-400 dark:text-slate-500"
+						>{formatDuration(music.duration)}</span
+					>
 				{/if}
 			</div>
 		</div>

@@ -22,7 +22,7 @@
 		</div>
 		<div class="flex flex-1 flex-col overflow-hidden">
 			<span class="truncate text-sm font-medium">{file.name}</span>
-			<span class="text-xs text-gray-500">{formatFileSize(file.size)}</span>
+			<span class="text-xs text-gray-500 dark:text-slate-400">{formatFileSize(file.size)}</span>
 		</div>
 	</div>
 {/if}

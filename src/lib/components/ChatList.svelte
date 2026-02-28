@@ -32,10 +32,51 @@
 	let activeTab: 'all' | 'friends' | 'groups' | 'official' = $state(getInitialTab());
 
 	const tabs = ['all', 'friends', 'groups', 'official'] as const;
+	const THEME_STORAGE_KEY = 'lime-viewer-theme';
+
+	function getInitialThemeMode(): boolean {
+		if (!browser) return false;
+		let savedTheme: string | null;
+		try {
+			savedTheme = localStorage.getItem(THEME_STORAGE_KEY);
+		} catch {
+			savedTheme = null;
+		}
+		if (savedTheme === 'dark') return true;
+		if (savedTheme === 'light') return false;
+		return window.matchMedia('(prefers-color-scheme: dark)').matches;
+	}
+
+	let isDarkTheme = $state(getInitialThemeMode());
+
+	function applyTheme(isDark: boolean) {
+		if (!browser) return;
+		document.documentElement.classList.toggle('dark', isDark);
+		document.documentElement.style.colorScheme = isDark ? 'dark' : 'light';
+		try {
+			localStorage.setItem(THEME_STORAGE_KEY, isDark ? 'dark' : 'light');
+		} catch {
+			// Ignore storage failures in restricted browsing contexts.
+		}
+		const themeColorMeta = document.querySelector('meta[name="theme-color"]');
+		if (themeColorMeta) {
+			themeColorMeta.setAttribute('content', isDark ? '#0f172a' : '#06c755');
+		}
+	}
+
+	function toggleTheme() {
+		isDarkTheme = !isDarkTheme;
+	}
 
 	$effect(() => {
 		if (browser) {
 			localStorage.setItem('chatListActiveTab', activeTab);
+		}
+	});
+
+	$effect(() => {
+		if (browser) {
+			applyTheme(isDarkTheme);
 		}
 	});
 
@@ -122,7 +163,7 @@
 </script>
 
 <div
-	class="relative flex h-full flex-col border-r border-gray-200 bg-[#E8F4F8]"
+	class="relative flex h-full flex-col border-r border-gray-200 bg-[#E8F4F8] dark:border-slate-700 dark:bg-slate-900"
 	class:w-80={!fullWidth}
 	class:w-full={fullWidth}
 	ontouchstart={handleTouchStart}
@@ -133,10 +174,21 @@
 	<!-- Fixed Header -->
 	<div class="shrink-0">
 		<!-- Header / Search -->
-		<div class="bg-[#7CC5E6] p-4 text-white">
+		<div class="bg-[#7CC5E6] p-4 text-white dark:bg-slate-800">
 			<div class="mb-3 flex items-center justify-between">
 				<h1 class="text-xl font-bold">トーク</h1>
 				<div class="flex items-center gap-2">
+					<button
+						onclick={toggleTheme}
+						class="flex items-center gap-1 rounded-lg bg-white/20 px-2 py-1 text-sm transition-colors hover:bg-white/30"
+						title={isDarkTheme ? 'ライトモードに切り替え' : 'ダークモードに切り替え'}
+						aria-label={isDarkTheme ? 'ライトモードに切り替え' : 'ダークモードに切り替え'}
+					>
+						<Icon
+							icon={isDarkTheme ? 'mdi:white-balance-sunny' : 'mdi:moon-waning-crescent'}
+							class="h-4 w-4"
+						/>
+					</button>
 					<button
 						onclick={() => (showExportModal = true)}
 						class="flex items-center gap-1 rounded-lg bg-white/20 px-2 py-1 text-sm transition-colors hover:bg-white/30"
@@ -170,12 +222,15 @@
 		</div>
 
 		<!-- Tabs -->
-		<div class="flex border-b border-gray-300 bg-white" onwheel={handleTabScroll}>
+		<div
+			class="flex border-b border-gray-300 bg-white dark:border-slate-700 dark:bg-slate-800"
+			onwheel={handleTabScroll}
+		>
 			{#each tabs as tab (tab)}
 				<button
 					class="flex-1 py-3 text-sm font-medium transition-colors {activeTab === tab
-						? 'border-b-2 border-blue-500 text-blue-500'
-						: 'text-gray-500 hover:text-gray-700'}"
+						? 'border-b-2 border-blue-500 text-blue-500 dark:border-cyan-400 dark:text-cyan-300'
+						: 'text-gray-500 hover:text-gray-700 dark:text-slate-400 dark:hover:text-slate-200'}"
 					onclick={() => (activeTab = tab)}
 				>
 					{tab === 'all'
@@ -194,15 +249,15 @@
 	<div class="min-h-0 flex-1 overflow-y-auto">
 		{#each filteredChats as chat (chat.id)}
 			<button
-				class="flex w-full items-center p-3 transition-colors hover:bg-blue-50 {selectedChatId ===
+				class="flex w-full items-center p-3 transition-colors hover:bg-blue-50 dark:hover:bg-slate-800 {selectedChatId ===
 				chat.id
-					? 'bg-blue-100'
+					? 'bg-blue-100 dark:bg-slate-700'
 					: ''}"
 				onclick={() => selectChat(chat.id)}
 			>
 				<!-- Avatar Placeholder -->
 				<div
-					class="mr-3 flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-full bg-gray-300 font-bold text-gray-600"
+					class="mr-3 flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-full bg-gray-300 font-bold text-gray-600 dark:bg-slate-600 dark:text-slate-100"
 				>
 					{#if chat.avatarUrl}
 						<img src={chat.avatarUrl} alt={chat.name} class="h-full w-full object-cover" />
@@ -213,17 +268,19 @@
 
 				<div class="min-w-0 flex-1 text-left">
 					<div class="mb-1 flex items-baseline justify-between">
-						<h3 class="truncate text-sm font-bold text-gray-800">
+						<h3 class="truncate text-sm font-bold text-gray-800 dark:text-slate-100">
 							{chat.name}
 							{#if (chat.memberCount ?? 0) > 0}
-								<span class="text-normal text-xs text-gray-500">({chat.memberCount})</span>
+								<span class="text-normal text-xs text-gray-500 dark:text-slate-400"
+									>({chat.memberCount})</span
+								>
 							{/if}
 						</h3>
-						<span class="ml-1 shrink-0 text-xs text-gray-500"
+						<span class="ml-1 shrink-0 text-xs text-gray-500 dark:text-slate-400"
 							>{formatTime(chat.lastMessageTime)}</span
 						>
 					</div>
-					<p class="truncate text-sm text-gray-500">{chat.lastMessage}</p>
+					<p class="truncate text-sm text-gray-500 dark:text-slate-400">{chat.lastMessage}</p>
 				</div>
 			</button>
 		{/each}

@@ -15,7 +15,7 @@
 	const hasCoordinates = $derived(!!location?.latitude && !!location?.longitude);
 
 	const bubbleClass = $derived(
-		`${getMediaBubbleStyle(isMe)} ${isMe ? 'bg-[#B8E986]' : 'bg-white'}`
+		`${getMediaBubbleStyle(isMe)} ${isMe ? 'bg-[#B8E986]' : 'bg-white dark:bg-slate-700'}`
 	);
 </script>
 
@@ -39,17 +39,17 @@
 				</a>
 			{:else}
 				<div class="flex h-full w-full items-center justify-center">
-					<span class="text-xs text-gray-400">位置情報</span>
+					<span class="text-xs text-gray-400 dark:text-slate-500">位置情報</span>
 				</div>
 			{/if}
 		</div>
 		<!-- Address Info -->
-		<div class="px-3 py-2 {isMe ? 'bg-[#B8E986]' : 'bg-white'}">
+		<div class="px-3 py-2 {isMe ? 'bg-[#B8E986]' : 'bg-white dark:bg-slate-700'}">
 			{#if location.name}
-				<p class="text-sm font-medium text-gray-900">{location.name}</p>
+				<p class="text-sm font-medium text-gray-900 dark:text-slate-100">{location.name}</p>
 			{/if}
 			{#if location.address}
-				<p class="line-clamp-2 text-xs text-gray-600">{location.address}</p>
+				<p class="line-clamp-2 text-xs text-gray-600 dark:text-slate-400">{location.address}</p>
 			{/if}
 			{#if hasCoordinates}
 				<a

@@ -25,8 +25,8 @@
 	</div>
 {:else}
 	<div
-		class="flex h-24 w-24 items-center justify-center rounded-lg border border-gray-200 bg-gray-100"
+		class="flex h-24 w-24 items-center justify-center rounded-lg border border-gray-200 bg-gray-100 dark:border-slate-600 dark:bg-slate-700"
 	>
-		<span class="text-xs text-gray-400">Sticker<br />(No ID)</span>
+		<span class="text-xs text-gray-400 dark:text-slate-400">Sticker<br />(No ID)</span>
 	</div>
 {/if}

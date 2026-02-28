@@ -12,7 +12,7 @@
 
 	const flex = $derived(message.attachment?.flex);
 	const bubbleClass = $derived(
-		`${getMediaBubbleStyle(isMe)} ${isMe ? 'bg-[#B8E986]' : 'bg-white'}`
+		`${getMediaBubbleStyle(isMe)} ${isMe ? 'bg-[#B8E986]' : 'bg-white dark:bg-slate-700'}`
 	);
 </script>
 
@@ -34,8 +34,8 @@
 				<Icon icon="heroicons:sparkles-solid" class="h-10 w-10 text-pink-400" />
 			</div>
 		{/if}
-		<div class="px-3 py-2 {isMe ? 'bg-[#B8E986]' : 'bg-white'}">
-			<span class="text-xs text-gray-500">LINE ギフト / Flex メッセージ</span>
+		<div class="px-3 py-2 {isMe ? 'bg-[#B8E986]' : 'bg-white dark:bg-slate-700'}">
+			<span class="text-xs text-gray-500 dark:text-slate-300">LINE ギフト / Flex メッセージ</span>
 		</div>
 	</div>
 {/if}

@@ -192,13 +192,13 @@
 <!-- Loading Screen during restoration -->
 {#if isRestoring}
 	<div
-		class="flex min-h-screen items-center justify-center bg-linear-to-br from-green-50 to-green-100"
+		class="flex min-h-screen items-center justify-center bg-linear-to-br from-green-50 to-green-100 dark:from-slate-900 dark:to-slate-800"
 	>
 		<div class="text-center">
 			<div
-				class="mb-4 inline-flex h-16 w-16 animate-spin items-center justify-center rounded-full border-4 border-green-200 border-t-green-600"
+				class="mb-4 inline-flex h-16 w-16 animate-spin items-center justify-center rounded-full border-4 border-green-200 border-t-green-600 dark:border-slate-700 dark:border-t-cyan-400"
 			></div>
-			<p class="text-gray-600">データを復元中...</p>
+			<p class="text-gray-600 dark:text-slate-300">データを復元中...</p>
 		</div>
 	</div>
 {:else if !isDataLoaded}
@@ -209,7 +209,9 @@
 	{/if}
 
 	{#if appReady}
-		<div class="flex h-full w-full overflow-hidden bg-white font-sans text-gray-800">
+		<div
+			class="flex h-full w-full overflow-hidden bg-white font-sans text-gray-800 dark:bg-slate-900 dark:text-slate-100"
+		>
 			{#if isMobile}
 				{#if selectedChat}
 					<div class="h-full w-full overflow-hidden">
@@ -248,7 +250,9 @@
 							onExternalHighlightHandled={handleExternalHighlightHandled}
 						/>
 					{:else}
-						<div class="flex h-full flex-col items-center justify-center bg-gray-50 text-gray-400">
+						<div
+							class="flex h-full flex-col items-center justify-center bg-gray-50 text-gray-400 dark:bg-slate-800 dark:text-slate-400"
+						>
 							<div class="mb-4 text-6xl">💬</div>
 							<p>チャットを選択してください</p>
 						</div>

@@ -199,7 +199,7 @@
 <!-- Search Bar Overlay - Fixed position with visual viewport adjustment -->
 <div
 	bind:this={searchBarRef}
-	class="fixed right-0 left-0 z-120 flex h-14 items-center gap-2 bg-[#7CC5E6] px-3 shadow-sm"
+	class="fixed right-0 left-0 z-120 flex h-14 items-center gap-2 bg-[#7CC5E6] px-3 shadow-sm dark:bg-slate-700"
 	style="top: {viewportOffset}px;"
 >
 	<button
@@ -214,15 +214,18 @@
 			type="text"
 			placeholder="検索"
 			bind:value={searchQuery}
-			class="w-full rounded-lg bg-white/90 py-2 pr-9 pl-9 text-sm text-gray-800 placeholder-gray-400 focus:bg-white focus:outline-none"
+			class="w-full rounded-lg bg-white/90 py-2 pr-9 pl-9 text-sm text-gray-800 placeholder-gray-400 focus:bg-white focus:outline-none dark:bg-slate-900 dark:text-slate-100 dark:placeholder-slate-500 dark:focus:bg-slate-900"
 		/>
 		<Icon
 			icon="mdi:magnify"
-			class="absolute top-1/2 left-2.5 h-5 w-5 -translate-y-1/2 text-gray-400"
+			class="absolute top-1/2 left-2.5 h-5 w-5 -translate-y-1/2 text-gray-400 dark:text-slate-500"
 		/>
 		{#if searchQuery}
 			<button onclick={clearSearch} class="absolute top-1/2 right-2.5 -translate-y-1/2">
-				<Icon icon="mdi:close-circle" class="h-5 w-5 text-gray-400 hover:text-gray-600" />
+				<Icon
+					icon="mdi:close-circle"
+					class="h-5 w-5 text-gray-400 hover:text-gray-600 dark:text-slate-500 dark:hover:text-slate-300"
+				/>
 			</button>
 		{/if}
 	</div>
@@ -238,33 +241,41 @@
 
 <!-- Suggestion Panel -->
 <div
-	class="fixed right-0 bottom-0 left-0 z-110 flex flex-col bg-[#A9DDEB]"
+	class="fixed right-0 bottom-0 left-0 z-110 flex flex-col bg-[#A9DDEB] dark:bg-slate-800"
 	style="top: calc({viewportOffset}px + 56px);"
 >
 	{#if !searchQuery.trim()}
-		<div class="flex h-full items-center justify-center px-6 text-center text-sm text-[#4B97AD]">
+		<div
+			class="flex h-full items-center justify-center px-6 text-center text-sm text-[#4B97AD] dark:text-slate-300"
+		>
 			キーワードを入力すると候補が表示されます
 		</div>
 	{:else if isSearching}
-		<div class="flex h-full items-center justify-center gap-2 text-sm text-[#4B97AD]">
+		<div
+			class="flex h-full items-center justify-center gap-2 text-sm text-[#4B97AD] dark:text-slate-300"
+		>
 			<Icon icon="mdi:loading" class="h-4 w-4 animate-spin" />
 			<span>検索中...</span>
 		</div>
 	{:else if searchResults.length === 0}
-		<div class="flex h-full items-center justify-center px-6 text-center text-sm text-[#4B97AD]">
+		<div
+			class="flex h-full items-center justify-center px-6 text-center text-sm text-[#4B97AD] dark:text-slate-300"
+		>
 			検索結果がありません
 		</div>
 	{:else}
-		<div class="shrink-0 border-b border-[#8EC5D6] bg-[#B6E5F0] px-4 pt-2">
+		<div
+			class="shrink-0 border-b border-[#8EC5D6] bg-[#B6E5F0] px-4 pt-2 dark:border-slate-700 dark:bg-slate-900"
+		>
 			<div
-				class="inline-block border-b-2 border-[#F1709A] px-1 pb-1 text-sm font-semibold text-[#2D8FA5]"
+				class="inline-block border-b-2 border-[#F1709A] px-1 pb-1 text-sm font-semibold text-[#2D8FA5] dark:text-sky-200"
 			>
 				メッセージ
 			</div>
 		</div>
 
 		<div
-			class="shrink-0 border-b border-[#8EC5D6] bg-[#B6E5F0] px-4 py-2 text-sm font-semibold text-[#2D8FA5]"
+			class="shrink-0 border-b border-[#8EC5D6] bg-[#B6E5F0] px-4 py-2 text-sm font-semibold text-[#2D8FA5] dark:border-slate-700 dark:bg-slate-900 dark:text-sky-200"
 		>
 			メッセージ {searchResults.length}
 		</div>
@@ -272,28 +283,28 @@
 		<div class="min-h-0 flex-1 overflow-y-auto">
 			{#each searchResults as result (result.id)}
 				<button
-					class={`flex w-full items-start gap-3 border-b border-[#93C8D9]/70 px-4 py-3 text-left transition-colors hover:bg-white/30 ${
-						selectedResultId === result.id ? 'bg-white/35' : ''
+					class={`flex w-full items-start gap-3 border-b border-[#93C8D9]/70 px-4 py-3 text-left transition-colors hover:bg-white/30 dark:border-slate-700 dark:hover:bg-slate-700 ${
+						selectedResultId === result.id ? 'bg-white/35 dark:bg-slate-700' : ''
 					}`}
 					onclick={() => selectSearchResult(result.id)}
 				>
 					<div
-						class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#7DBFD5] text-sm font-semibold text-white"
+						class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#7DBFD5] text-sm font-semibold text-white dark:bg-slate-700"
 					>
 						{getAvatarText(result)}
 					</div>
 
 					<div class="min-w-0 flex-1">
 						<div class="flex items-start justify-between gap-3">
-							<p class="truncate text-sm font-semibold text-[#2C8FA5]">
+							<p class="truncate text-sm font-semibold text-[#2C8FA5] dark:text-sky-200">
 								{getSenderName(result)}
 							</p>
-							<span class="shrink-0 text-xs text-[#5AA2B5]">
+							<span class="shrink-0 text-xs text-[#5AA2B5] dark:text-slate-400">
 								{formatResultDate(result.timestamp)}
 							</span>
 						</div>
 
-						<p class="mt-1 truncate text-sm text-[#3D95A7]">
+						<p class="mt-1 truncate text-sm text-[#3D95A7] dark:text-slate-300">
 							{#each buildPreviewParts(result, searchQuery) as part, i (i)}
 								<span class={part.matched ? 'font-semibold text-[#F1709A]' : ''}>
 									{part.text}

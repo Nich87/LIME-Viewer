@@ -320,19 +320,19 @@
 </script>
 
 <div
-	class="absolute inset-0 z-50 flex flex-col bg-[#F4F6F8]"
+	class="absolute inset-0 z-50 flex flex-col bg-[#F4F6F8] dark:bg-slate-900"
 	role="dialog"
 	aria-modal="true"
 	aria-label="トーク全体検索"
 >
 	<form
-		class="flex items-center gap-2 border-b border-gray-200 bg-white px-3 py-3"
+		class="flex items-center gap-2 border-b border-gray-200 bg-white px-3 py-3 dark:border-slate-700 dark:bg-slate-900"
 		onsubmit={handleSubmit}
 	>
 		<button
 			type="button"
 			onclick={onClose}
-			class="rounded-full p-1 text-gray-700 transition-colors hover:bg-gray-100"
+			class="rounded-full p-1 text-gray-700 transition-colors hover:bg-gray-100 dark:text-slate-200 dark:hover:bg-slate-800"
 			aria-label="検索を閉じる"
 		>
 			<Icon icon="mdi:chevron-left" class="h-6 w-6" />
@@ -344,16 +344,16 @@
 				type="text"
 				placeholder="検索"
 				bind:value={searchQuery}
-				class="w-full rounded-full bg-gray-100 py-2 pr-9 pl-9 text-sm text-gray-800 placeholder-gray-400 focus:outline-none"
+				class="w-full rounded-full bg-gray-100 py-2 pr-9 pl-9 text-sm text-gray-800 placeholder-gray-400 focus:outline-none dark:bg-slate-800 dark:text-slate-100 dark:placeholder-slate-500"
 			/>
 			<Icon
 				icon="mdi:magnify"
-				class="pointer-events-none absolute top-1/2 left-3 h-5 w-5 -translate-y-1/2 text-gray-400"
+				class="pointer-events-none absolute top-1/2 left-3 h-5 w-5 -translate-y-1/2 text-gray-400 dark:text-slate-500"
 			/>
 			{#if searchQuery}
 				<button
 					type="button"
-					class="absolute top-1/2 right-2 -translate-y-1/2 rounded-full p-1 text-gray-400 transition-colors hover:bg-gray-200 hover:text-gray-600"
+					class="absolute top-1/2 right-2 -translate-y-1/2 rounded-full p-1 text-gray-400 transition-colors hover:bg-gray-200 hover:text-gray-600 dark:text-slate-500 dark:hover:bg-slate-700 dark:hover:text-slate-300"
 					onclick={clearSearchQuery}
 					aria-label="検索キーワードをクリア"
 				>
@@ -363,8 +363,10 @@
 		</div>
 	</form>
 
-	<div class="border-b border-gray-200 bg-white px-4 pt-4 pb-3">
-		<p class="mb-3 text-sm font-semibold text-gray-800">カテゴリーで検索</p>
+	<div
+		class="border-b border-gray-200 bg-white px-4 pt-4 pb-3 dark:border-slate-700 dark:bg-slate-900"
+	>
+		<p class="mb-3 text-sm font-semibold text-gray-800 dark:text-slate-100">カテゴリーで検索</p>
 		<div class="grid grid-cols-4 gap-3">
 			{#each categories as category (category.id)}
 				<button
@@ -376,15 +378,15 @@
 					<span
 						class="flex h-10 w-10 items-center justify-center rounded-full border transition-colors {selectedCategory ===
 						category.id
-							? 'border-[#2DA9D0] bg-[#E2F4FA] text-[#2DA9D0]'
-							: 'border-gray-300 bg-white text-gray-600'}"
+							? 'border-[#2DA9D0] bg-[#E2F4FA] text-[#2DA9D0] dark:border-cyan-400 dark:bg-cyan-950 dark:text-cyan-300'
+							: 'border-gray-300 bg-white text-gray-600 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300'}"
 					>
 						<Icon icon={category.icon} class="h-5 w-5" />
 					</span>
 					<span
 						class="text-[11px] font-medium {selectedCategory === category.id
-							? 'text-[#2DA9D0]'
-							: 'text-gray-600'}"
+							? 'text-[#2DA9D0] dark:text-cyan-300'
+							: 'text-gray-600 dark:text-slate-300'}"
 					>
 						{category.label}
 					</span>
@@ -393,41 +395,49 @@
 		</div>
 	</div>
 
-	<div class="min-h-0 flex-1 overflow-y-auto bg-white">
+	<div class="min-h-0 flex-1 overflow-y-auto bg-white dark:bg-slate-900">
 		{#if normalizedQuery}
-			<div class="border-b border-gray-100 px-4 py-2 text-xs text-gray-500">
+			<div
+				class="border-b border-gray-100 px-4 py-2 text-xs text-gray-500 dark:border-slate-700 dark:text-slate-400"
+			>
 				検索結果 {totalSearchResultsCount} 件
 			</div>
 
 			{#if searchingMessages}
-				<div class="px-4 py-3 text-xs text-gray-500">メッセージを検索中...</div>
+				<div class="px-4 py-3 text-xs text-gray-500 dark:text-slate-400">メッセージを検索中...</div>
 			{/if}
 
 			{#if !searchingMessages && totalSearchResultsCount === 0}
-				<div class="px-6 py-10 text-center text-sm text-gray-400">検索結果がありません</div>
+				<div class="px-6 py-10 text-center text-sm text-gray-400 dark:text-slate-500">
+					検索結果がありません
+				</div>
 			{/if}
 
 			{#if filteredMessageSearchResults.length > 0}
-				<div class="border-b border-gray-100 px-4 py-2 text-xs font-semibold text-gray-600">
+				<div
+					class="border-b border-gray-100 px-4 py-2 text-xs font-semibold text-gray-600 dark:border-slate-700 dark:text-slate-300"
+				>
 					メッセージ
 				</div>
 
 				{#each filteredMessageSearchResults as result (result.id)}
 					<button
 						type="button"
-						class="w-full border-b border-gray-100 px-4 py-3 text-left transition-colors hover:bg-gray-50"
+						class="w-full border-b border-gray-100 px-4 py-3 text-left transition-colors hover:bg-gray-50 dark:border-slate-700 dark:hover:bg-slate-800"
 						onclick={() => handleSelectMessageResult(result)}
 					>
 						<div class="mb-1 flex items-start justify-between gap-2">
-							<p class="min-w-0 truncate text-sm font-semibold text-gray-800">
+							<p class="min-w-0 truncate text-sm font-semibold text-gray-800 dark:text-slate-100">
 								{getChatName(result.chatId)}
 							</p>
-							<span class="shrink-0 text-xs text-gray-400"
+							<span class="shrink-0 text-xs text-gray-400 dark:text-slate-500"
 								>{formatResultDate(result.timestamp)}</span
 							>
 						</div>
-						<p class="truncate text-xs text-gray-500">{getSenderName(result)}</p>
-						<p class="mt-1 line-clamp-2 text-sm text-gray-600">
+						<p class="truncate text-xs text-gray-500 dark:text-slate-400">
+							{getSenderName(result)}
+						</p>
+						<p class="mt-1 line-clamp-2 text-sm text-gray-600 dark:text-slate-300">
 							{#each buildHighlightParts(getMessagePreview(result.content), normalizedQuery) as part, i (i)}
 								<span class={part.matched ? 'font-semibold text-[#F1709A]' : ''}>{part.text}</span>
 							{/each}
@@ -437,18 +447,20 @@
 			{/if}
 
 			{#if searchResults.length > 0}
-				<div class="border-b border-gray-100 px-4 py-2 text-xs font-semibold text-gray-600">
+				<div
+					class="border-b border-gray-100 px-4 py-2 text-xs font-semibold text-gray-600 dark:border-slate-700 dark:text-slate-300"
+				>
 					トーク
 				</div>
 
 				{#each searchResults as chat (chat.id)}
 					<button
 						type="button"
-						class="flex w-full items-center gap-3 border-b border-gray-100 px-4 py-3 text-left transition-colors hover:bg-gray-50"
+						class="flex w-full items-center gap-3 border-b border-gray-100 px-4 py-3 text-left transition-colors hover:bg-gray-50 dark:border-slate-700 dark:hover:bg-slate-800"
 						onclick={() => handleSelectChat(chat.id)}
 					>
 						<div
-							class="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full bg-gray-300 text-sm font-bold text-gray-600"
+							class="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full bg-gray-300 text-sm font-bold text-gray-600 dark:bg-slate-600 dark:text-slate-100"
 						>
 							{#if chat.avatarUrl}
 								<img src={chat.avatarUrl} alt={chat.name} class="h-full w-full object-cover" />
@@ -459,16 +471,16 @@
 
 						<div class="min-w-0 flex-1">
 							<div class="mb-0.5 flex items-baseline justify-between gap-2">
-								<p class="truncate text-sm font-semibold text-gray-800">
+								<p class="truncate text-sm font-semibold text-gray-800 dark:text-slate-100">
 									{#each buildHighlightParts(chat.name, normalizedQuery) as part, i (i)}
 										<span class={part.matched ? 'text-[#F1709A]' : ''}>{part.text}</span>
 									{/each}
 								</p>
-								<span class="shrink-0 text-xs text-gray-400"
+								<span class="shrink-0 text-xs text-gray-400 dark:text-slate-500"
 									>{formatTime(chat.lastMessageTime)}</span
 								>
 							</div>
-							<p class="truncate text-sm text-gray-500">
+							<p class="truncate text-sm text-gray-500 dark:text-slate-400">
 								{#each buildHighlightParts(chat.lastMessage || '(メッセージなし)', normalizedQuery) as part, i (i)}
 									<span class={part.matched ? 'font-semibold text-[#F1709A]' : ''}>
 										{part.text}
@@ -480,30 +492,34 @@
 				{/each}
 			{/if}
 		{:else}
-			<div class="border-b border-gray-100 px-4 py-3 text-sm font-semibold text-gray-800">
+			<div
+				class="border-b border-gray-100 px-4 py-3 text-sm font-semibold text-gray-800 dark:border-slate-700 dark:text-slate-100"
+			>
 				最近の検索
 			</div>
 
 			{#if visibleRecentSearches.length === 0}
-				<div class="px-6 py-10 text-center text-sm text-gray-400">最近の検索はありません</div>
+				<div class="px-6 py-10 text-center text-sm text-gray-400 dark:text-slate-500">
+					最近の検索はありません
+				</div>
 			{:else}
 				{#each visibleRecentSearches as query (query)}
-					<div class="flex items-center border-b border-gray-100 px-4 py-2.5">
+					<div class="flex items-center border-b border-gray-100 px-4 py-2.5 dark:border-slate-700">
 						<button
 							type="button"
 							class="flex min-w-0 flex-1 items-center gap-2 text-left"
 							onclick={() => handleSelectRecentSearch(query)}
 						>
 							<span
-								class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-gray-100 text-gray-500"
+								class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-gray-100 text-gray-500 dark:bg-slate-800 dark:text-slate-300"
 							>
 								<Icon icon="mdi:magnify" class="h-4 w-4" />
 							</span>
-							<span class="truncate text-sm text-gray-700">{query}</span>
+							<span class="truncate text-sm text-gray-700 dark:text-slate-200">{query}</span>
 						</button>
 						<button
 							type="button"
-							class="rounded-full p-1 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600"
+							class="rounded-full p-1 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600 dark:text-slate-500 dark:hover:bg-slate-800 dark:hover:text-slate-300"
 							onclick={() => removeRecentSearch(query)}
 							aria-label="検索履歴を削除"
 						>
@@ -516,22 +532,22 @@
 	</div>
 
 	<div
-		class="flex items-center justify-between border-t border-gray-200 bg-white px-4 py-2.5 text-xs"
+		class="flex items-center justify-between border-t border-gray-200 bg-white px-4 py-2.5 text-xs dark:border-slate-700 dark:bg-slate-900"
 	>
 		<button
 			type="button"
 			class="font-medium transition-colors {autoSaveHistory
-				? 'text-gray-600 hover:text-gray-800'
-				: 'text-[#2DA9D0] hover:text-[#2384A3]'}"
+				? 'text-gray-600 hover:text-gray-800 dark:text-slate-300 dark:hover:text-slate-100'
+				: 'text-[#2DA9D0] hover:text-[#2384A3] dark:text-cyan-300 dark:hover:text-cyan-200'}"
 			onclick={toggleAutoSaveHistory}
 		>
 			{autoSaveHistory ? '自動保存をオフにする' : '自動保存をオンにする'}
 		</button>
 		<button
 			type="button"
-			class="font-medium transition-colors disabled:cursor-not-allowed disabled:text-gray-300 {visibleRecentSearches.length >
+			class="font-medium transition-colors disabled:cursor-not-allowed disabled:text-gray-300 dark:disabled:text-slate-600 {visibleRecentSearches.length >
 			0
-				? 'text-gray-500 hover:text-gray-700'
+				? 'text-gray-500 hover:text-gray-700 dark:text-slate-400 dark:hover:text-slate-200'
 				: ''}"
 			onclick={clearSearchHistory}
 			disabled={visibleRecentSearches.length === 0}

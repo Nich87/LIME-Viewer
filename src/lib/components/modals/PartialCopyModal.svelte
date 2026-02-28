@@ -83,39 +83,43 @@
 
 	<!-- Modal Content -->
 	<div
-		class="relative z-10 flex max-h-[80vh] w-full max-w-lg flex-col overflow-hidden rounded-2xl bg-white shadow-2xl"
+		class="relative z-10 flex max-h-[80vh] w-full max-w-lg flex-col overflow-hidden rounded-2xl bg-white shadow-2xl dark:bg-slate-900"
 	>
 		<!-- Header -->
-		<div class="flex items-center justify-between border-b border-gray-200 px-4 py-3">
-			<h3 class="text-lg font-bold text-gray-800">
+		<div
+			class="flex items-center justify-between border-b border-gray-200 px-4 py-3 dark:border-slate-700"
+		>
+			<h3 class="text-lg font-bold text-gray-800 dark:text-slate-100">
 				コピー {messages.length > 1 ? `(${messages.length}件)` : ''}
 			</h3>
 			<button
 				type="button"
-				class="rounded-full p-1 transition-colors hover:bg-gray-100"
+				class="rounded-full p-1 transition-colors hover:bg-gray-100 dark:hover:bg-slate-800"
 				onclick={onClose}
 				aria-label="閉じる"
 			>
-				<Icon icon="mdi:close" class="h-6 w-6 text-gray-500" />
+				<Icon icon="mdi:close" class="h-6 w-6 text-gray-500 dark:text-slate-300" />
 			</button>
 		</div>
 
 		<!-- Instructions -->
-		<div class="bg-gray-50 px-4 py-2">
-			<p class="text-sm text-gray-600">テキストを選択して部分コピー、またはすべてコピー</p>
+		<div class="bg-gray-50 px-4 py-2 dark:bg-slate-800">
+			<p class="text-sm text-gray-600 dark:text-slate-300">
+				テキストを選択して部分コピー、またはすべてコピー
+			</p>
 		</div>
 
 		<!-- Text Content Area -->
 		<div class="flex-1 overflow-auto p-4">
 			<div
-				class="min-h-24 rounded-lg bg-gray-100 p-4 text-base leading-relaxed wrap-break-word whitespace-pre-wrap text-gray-800 select-text"
+				class="min-h-24 rounded-lg bg-gray-100 p-4 text-base leading-relaxed wrap-break-word whitespace-pre-wrap text-gray-800 select-text dark:bg-slate-800 dark:text-slate-100"
 			>
 				{formattedText || '（テキストがありません）'}
 			</div>
 		</div>
 
 		<!-- Actions -->
-		<div class="flex gap-2 border-t border-gray-200 p-4">
+		<div class="flex gap-2 border-t border-gray-200 p-4 dark:border-slate-700">
 			<button
 				type="button"
 				class="flex flex-1 items-center justify-center gap-2 rounded-lg bg-[#06C755] px-4 py-3 font-medium text-white transition-colors hover:bg-[#05b34d]"
@@ -126,7 +130,7 @@
 			</button>
 			<button
 				type="button"
-				class="flex flex-1 items-center justify-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-3 font-medium text-gray-700 transition-colors hover:bg-gray-50"
+				class="flex flex-1 items-center justify-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-3 font-medium text-gray-700 transition-colors hover:bg-gray-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
 				onclick={copySelection}
 			>
 				<Icon icon="mdi:content-cut" class="h-5 w-5" />

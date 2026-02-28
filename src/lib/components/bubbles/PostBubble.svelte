@@ -34,10 +34,10 @@
 				{isAlbum ? 'アルバム' : 'ノート'}に投稿しました
 			</span>
 			{#if post.albumName}
-				<span class="truncate text-xs text-gray-600">{post.albumName}</span>
+				<span class="truncate text-xs text-gray-600 dark:text-slate-300">{post.albumName}</span>
 			{/if}
 			{#if post.text}
-				<span class="truncate text-xs text-gray-600">{post.text}</span>
+				<span class="truncate text-xs text-gray-600 dark:text-slate-300">{post.text}</span>
 			{/if}
 		</div>
 	</div>

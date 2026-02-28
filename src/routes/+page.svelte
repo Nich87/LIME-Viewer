@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import { afterNavigate, pushState, replaceState } from '$app/navigation';
 	import ChatList from '$lib/components/ChatList.svelte';
 	import ChatDetail from '$lib/components/ChatDetail.svelte';
 	import SplashScreen from '$lib/components/SplashScreen.svelte';
@@ -19,6 +20,15 @@
 	let isDataLoaded = $state(false);
 
 	let isRestoring = $state(false);
+	let initializedHistoryState = false;
+
+	afterNavigate(() => {
+		if (initializedHistoryState) return;
+		initializedHistoryState = true;
+		if (!history.state?.view) {
+			replaceState('', { view: 'list' });
+		}
+	});
 
 	async function initializeFromStorage() {
 		if (!databaseService.isInitialized()) {
@@ -88,10 +98,6 @@
 		};
 		window.addEventListener('popstate', handlePopState);
 
-		if (!history.state?.view) {
-			history.replaceState({ view: 'list' }, '');
-		}
-
 		initializeFromStorage();
 
 		return () => {
@@ -129,7 +135,7 @@
 		loadingMessages = true;
 
 		if (isMobile) {
-			history.pushState({ view: 'chat', chatId }, '');
+			pushState('', { view: 'chat', chatId });
 		}
 
 		try {

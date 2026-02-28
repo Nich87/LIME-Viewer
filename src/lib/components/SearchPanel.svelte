@@ -15,8 +15,9 @@
 	// Search state
 	let searchQuery = $state('');
 	let searchResults: Message[] = $state([]);
-	let currentResultIndex = $state(0);
+	let selectedResultId: number | null = $state(null);
 	let isSearching = $state(false);
+	let activeSearchToken = 0;
 	let debounceTimer: ReturnType<typeof setTimeout> | null = null;
 
 	// Visual viewport offset for mobile keyboard
@@ -54,27 +55,31 @@
 
 		const query = searchQuery.trim();
 		if (!query) {
+			activeSearchToken += 1;
 			searchResults = [];
-			currentResultIndex = 0;
+			selectedResultId = null;
 			isSearching = false;
 			onSearchResult(null);
 			return;
 		}
 
 		isSearching = true;
+		const searchToken = ++activeSearchToken;
 		debounceTimer = setTimeout(() => {
-			performSearch(query);
+			performSearch(query, searchToken);
 		}, 300);
 	}
 
 	// Search functionality with chunked processing to prevent UI freeze
-	function performSearch(query: string) {
+	function performSearch(query: string, searchToken: number) {
 		const lowerQuery = query.toLowerCase();
 		const results: Message[] = [];
 		const chunkSize = 1000;
 		let index = 0;
 
 		function processChunk() {
+			if (searchToken !== activeSearchToken) return;
+
 			const end = Math.min(index + chunkSize, messages.length);
 
 			for (let i = index; i < end; i++) {
@@ -90,34 +95,92 @@
 				// Continue with next chunk in next frame
 				requestAnimationFrame(processChunk);
 			} else {
-				// Search complete
-				searchResults = results;
-				currentResultIndex = 0;
-				isSearching = false;
+				if (searchToken !== activeSearchToken) return;
 
-				if (results.length > 0) onSearchResult(results[0].id);
-				else onSearchResult(null);
+				// Search complete
+				searchResults = results.sort((a, b) => b.timestamp - a.timestamp);
+				selectedResultId = null;
+				isSearching = false;
+				onSearchResult(null);
 			}
 		}
 
 		processChunk();
 	}
 
-	function navigateResult(direction: 'prev' | 'next') {
-		if (searchResults.length === 0) return;
+	function formatResultDate(timestamp: number): string {
+		if (!timestamp) return '';
+		const date = new Date(timestamp);
+		const now = new Date();
+		const sameYear = date.getFullYear() === now.getFullYear();
 
-		if (direction === 'next') currentResultIndex = (currentResultIndex + 1) % searchResults.length;
-		else
-			currentResultIndex = (currentResultIndex - 1 + searchResults.length) % searchResults.length;
+		if (sameYear) return `${date.getMonth() + 1}/${date.getDate()}`;
+		return `${date.getFullYear()}/${date.getMonth() + 1}/${date.getDate()}`;
+	}
 
-		onSearchResult(searchResults[currentResultIndex].id);
+	function getSenderName(message: Message): string {
+		if (message.isMe) return '自分';
+		return message.fromName || message.fromId || '不明';
+	}
+
+	function getAvatarText(message: Message): string {
+		return getSenderName(message).slice(0, 1).toUpperCase();
+	}
+
+	function escapeRegExp(value: string): string {
+		return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+	}
+
+	function getPreviewText(message: Message): string {
+		return message.content?.trim() || '';
+	}
+
+	function buildPreviewParts(
+		message: Message,
+		query: string
+	): Array<{ text: string; matched: boolean }> {
+		const previewText = getPreviewText(message);
+		if (!previewText) return [{ text: '(本文なし)', matched: false }];
+
+		const trimmedQuery = query.trim();
+		if (!trimmedQuery) return [{ text: previewText.slice(0, 60), matched: false }];
+
+		const lowerText = previewText.toLowerCase();
+		const lowerQuery = trimmedQuery.toLowerCase();
+		const matchIndex = lowerText.indexOf(lowerQuery);
+
+		const windowStart = matchIndex >= 0 ? Math.max(matchIndex - 12, 0) : 0;
+		const windowEnd =
+			matchIndex >= 0
+				? Math.min(matchIndex + trimmedQuery.length + 24, previewText.length)
+				: Math.min(previewText.length, 60);
+
+		const clippedText = previewText.slice(windowStart, windowEnd);
+		const parts: Array<{ text: string; matched: boolean }> = [];
+		if (windowStart > 0) parts.push({ text: '…', matched: false });
+
+		const escapedQuery = escapeRegExp(trimmedQuery);
+		const regex = new RegExp(`(${escapedQuery})`, 'gi');
+		const matchedParts = clippedText.split(regex).filter((part) => part.length > 0);
+		for (const part of matchedParts) {
+			parts.push({ text: part, matched: part.toLowerCase() === lowerQuery });
+		}
+
+		if (windowEnd < previewText.length) parts.push({ text: '…', matched: false });
+		return parts;
+	}
+
+	function selectSearchResult(messageId: number) {
+		selectedResultId = messageId;
+		onSearchResult(messageId);
 	}
 
 	function clearSearch() {
 		if (debounceTimer) clearTimeout(debounceTimer);
+		activeSearchToken += 1;
 		searchQuery = '';
 		searchResults = [];
-		currentResultIndex = 0;
+		selectedResultId = null;
 		isSearching = false;
 		onSearchResult(null);
 	}
@@ -130,7 +193,7 @@
 <!-- Search Bar Overlay - Fixed position with visual viewport adjustment -->
 <div
 	bind:this={searchBarRef}
-	class="fixed right-0 left-0 z-100 flex h-14 items-center gap-2 bg-[#7CC5E6] px-3 shadow-sm"
+	class="fixed right-0 left-0 z-120 flex h-14 items-center gap-2 bg-[#7CC5E6] px-3 shadow-sm"
 	style="top: {viewportOffset}px;"
 >
 	<button
@@ -167,47 +230,73 @@
 	</button>
 </div>
 
-<!-- Search Results Counter & Navigation -->
-{#if isSearching}
-	<div
-		class="fixed right-0 left-0 z-100 border-b border-gray-200 bg-white/95 px-4 py-2 text-sm text-gray-500 backdrop-blur-sm"
-		style="top: calc({viewportOffset}px + 3.5rem);"
-	>
-		<div class="flex items-center gap-2">
+<!-- Suggestion Panel -->
+<div
+	class="fixed right-0 bottom-0 left-0 z-110 flex flex-col bg-[#A9DDEB]"
+	style="top: calc({viewportOffset}px + 56px);"
+>
+	{#if !searchQuery.trim()}
+		<div class="flex h-full items-center justify-center px-6 text-center text-sm text-[#4B97AD]">
+			キーワードを入力すると候補が表示されます
+		</div>
+	{:else if isSearching}
+		<div class="flex h-full items-center justify-center gap-2 text-sm text-[#4B97AD]">
 			<Icon icon="mdi:loading" class="h-4 w-4 animate-spin" />
 			<span>検索中...</span>
 		</div>
-	</div>
-{:else if searchQuery && searchResults.length > 0}
-	<div
-		class="fixed right-0 left-0 z-100 flex items-center justify-between border-b border-gray-200 bg-white/95 px-4 py-2 text-sm backdrop-blur-sm"
-		style="top: calc({viewportOffset}px + 3.5rem);"
-	>
-		<span class="text-gray-600">
-			{currentResultIndex + 1} / {searchResults.length} 件
-		</span>
-		<div class="flex gap-1">
-			<button
-				onclick={() => navigateResult('prev')}
-				class="rounded p-1 hover:bg-gray-200"
-				disabled={searchResults.length <= 1}
-			>
-				<Icon icon="mdi:chevron-up" class="h-5 w-5" />
-			</button>
-			<button
-				onclick={() => navigateResult('next')}
-				class="rounded p-1 hover:bg-gray-200"
-				disabled={searchResults.length <= 1}
-			>
-				<Icon icon="mdi:chevron-down" class="h-5 w-5" />
-			</button>
+	{:else if searchResults.length === 0}
+		<div class="flex h-full items-center justify-center px-6 text-center text-sm text-[#4B97AD]">
+			検索結果がありません
 		</div>
-	</div>
-{:else if searchQuery && searchResults.length === 0}
-	<div
-		class="fixed right-0 left-0 z-100 border-b border-gray-200 bg-white/95 px-4 py-2 text-sm text-gray-500 backdrop-blur-sm"
-		style="top: calc({viewportOffset}px + 3.5rem);"
-	>
-		検索結果がありません
-	</div>
-{/if}
+	{:else}
+		<div class="shrink-0 border-b border-[#8EC5D6] bg-[#B6E5F0] px-4 pt-2">
+			<div
+				class="inline-block border-b-2 border-[#F1709A] px-1 pb-1 text-sm font-semibold text-[#2D8FA5]"
+			>
+				メッセージ
+			</div>
+		</div>
+
+		<div
+			class="shrink-0 border-b border-[#8EC5D6] bg-[#B6E5F0] px-4 py-2 text-sm font-semibold text-[#2D8FA5]"
+		>
+			メッセージ {searchResults.length}
+		</div>
+
+		<div class="min-h-0 flex-1 overflow-y-auto">
+			{#each searchResults as result (result.id)}
+				<button
+					class={`flex w-full items-start gap-3 border-b border-[#93C8D9]/70 px-4 py-3 text-left transition-colors hover:bg-white/30 ${
+						selectedResultId === result.id ? 'bg-white/35' : ''
+					}`}
+					onclick={() => selectSearchResult(result.id)}
+				>
+					<div
+						class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#7DBFD5] text-sm font-semibold text-white"
+					>
+						{getAvatarText(result)}
+					</div>
+
+					<div class="min-w-0 flex-1">
+						<div class="flex items-start justify-between gap-3">
+							<p class="truncate text-sm font-semibold text-[#2C8FA5]">
+								{getSenderName(result)}
+							</p>
+							<span class="shrink-0 text-xs text-[#5AA2B5]">
+								{formatResultDate(result.timestamp)}
+							</span>
+						</div>
+
+						<p class="mt-1 truncate text-sm text-[#3D95A7]">
+							{#each buildPreviewParts(result, searchQuery) as part, i (i)}
+								<span class={part.matched ? 'font-semibold text-[#F1709A]' : ''}>
+									{part.text}
+								</span>
+							{/each}
+						</p>
+					</div>
+				</button>
+			{/each}
+		</div>
+	{/if}
+</div>

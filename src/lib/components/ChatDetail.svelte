@@ -17,10 +17,19 @@
 		chat: ChatRoom;
 		messages?: Message[];
 		loading?: boolean;
+		externalHighlightMessageId?: number | null;
+		onExternalHighlightHandled?: (messageId: number) => void;
 		onBack?: () => void;
 	}
 
-	let { chat, messages = [], loading = false, onBack }: Props = $props();
+	let {
+		chat,
+		messages = [],
+		loading = false,
+		externalHighlightMessageId = null,
+		onExternalHighlightHandled,
+		onBack
+	}: Props = $props();
 
 	const imageMessages = $derived(
 		messages.filter((m) => m.attachment?.type === 'image' && m.attachment?.url)
@@ -43,6 +52,7 @@
 	let showSearch = $state(false);
 	let showCalendar = $state(false);
 	let highlightedMessageId: number | null = $state(null);
+	let lastExternallyHighlightedMessageId: number | null = $state(null);
 	let searchNavigation: { resultIds: number[]; currentIndex: number } | null = $state(null);
 	let messageElements = new SvelteMap<number, HTMLElement>();
 	let dateSeparatorElements = new SvelteMap<number, HTMLElement>(); // Key: message index
@@ -77,8 +87,20 @@
 		showSearch = false;
 		showCalendar = false;
 		highlightedMessageId = null;
+		lastExternallyHighlightedMessageId = null;
 		searchNavigation = null;
 		clearSelection();
+	});
+
+	// Handle highlight request from global search
+	$effect(() => {
+		if (!externalHighlightMessageId) return;
+		if (externalHighlightMessageId === lastExternallyHighlightedMessageId) return;
+		if (!messages.some((message) => message.id === externalHighlightMessageId)) return;
+
+		lastExternallyHighlightedMessageId = externalHighlightMessageId;
+		scrollToMessage(externalHighlightMessageId);
+		onExternalHighlightHandled?.(externalHighlightMessageId);
 	});
 
 	// Auto scroll control

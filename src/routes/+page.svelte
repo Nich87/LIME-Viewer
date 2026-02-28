@@ -11,6 +11,7 @@
 	let chats: ChatRoom[] = $state([]);
 	let messages: Message[] = $state([]);
 	let selectedChatId: string | null = $state(null);
+	let pendingHighlightMessageId: number | null = $state(null);
 	let loadingMessages = $state(false);
 
 	let isMobile = $state(false);
@@ -127,20 +128,33 @@
 		appReady = true;
 	}
 
-	async function handleChatSelect(chatId: string) {
-		if (selectedChatId === chatId) return;
+	async function handleChatSelect(chatId: string, options?: { messageId?: number }) {
+		const highlightMessageId = options?.messageId ?? null;
+		const isSameChat = selectedChatId === chatId;
+		if (isSameChat && !highlightMessageId) return;
+
+		if (highlightMessageId) {
+			pendingHighlightMessageId = highlightMessageId;
+			if (isSameChat && messages.some((message) => message.id === highlightMessageId)) {
+				return;
+			}
+		} else {
+			pendingHighlightMessageId = null;
+		}
 
 		selectedChatId = chatId;
 		messages = [];
 		loadingMessages = true;
 
-		if (isMobile) {
+		if (isMobile && !isSameChat) {
 			pushState('', { view: 'chat', chatId });
 		}
 
 		try {
 			await mediaService.preloadChatMedia(chatId);
-			const loadedMessages = await databaseService.getMessages(chatId, 100);
+			const loadedMessages = highlightMessageId
+				? await databaseService.getAllMessages(chatId)
+				: await databaseService.getMessages(chatId, 100);
 			messages = loadedMessages;
 		} catch (e) {
 			console.error(e);
@@ -149,12 +163,17 @@
 		}
 	}
 
+	function handleExternalHighlightHandled() {
+		pendingHighlightMessageId = null;
+	}
+
 	function handleBack() {
 		if (isMobile && history.state?.view === 'chat') {
 			history.back();
 		} else {
 			selectedChatId = null;
 			messages = [];
+			pendingHighlightMessageId = null;
 		}
 	}
 
@@ -164,6 +183,7 @@
 		chats = [];
 		messages = [];
 		selectedChatId = null;
+		pendingHighlightMessageId = null;
 	}
 
 	let selectedChat = $derived(chats.find((c) => c.id === selectedChatId));
@@ -197,6 +217,8 @@
 							chat={selectedChat}
 							{messages}
 							loading={loadingMessages}
+							externalHighlightMessageId={pendingHighlightMessageId}
+							onExternalHighlightHandled={handleExternalHighlightHandled}
 							onBack={handleBack}
 						/>
 					</div>
@@ -218,7 +240,13 @@
 
 				<div class="relative h-full min-w-0 flex-1">
 					{#if selectedChat}
-						<ChatDetail chat={selectedChat} {messages} loading={loadingMessages} />
+						<ChatDetail
+							chat={selectedChat}
+							{messages}
+							loading={loadingMessages}
+							externalHighlightMessageId={pendingHighlightMessageId}
+							onExternalHighlightHandled={handleExternalHighlightHandled}
+						/>
 					{:else}
 						<div class="flex h-full flex-col items-center justify-center bg-gray-50 text-gray-400">
 							<div class="mb-4 text-6xl">💬</div>

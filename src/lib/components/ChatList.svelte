@@ -3,11 +3,12 @@
 	import Icon from '@iconify/svelte';
 	import type { ChatRoom } from '$lib/schema';
 	import ExportAllModal from './modals/ExportAllModal.svelte';
+	import ChatGlobalSearchPanel from './ChatGlobalSearchPanel.svelte';
 
 	interface Props {
 		chats?: ChatRoom[];
 		selectedChatId?: string | null;
-		onselect?: (id: string) => void;
+		onselect?: (id: string, options?: { messageId?: number }) => void;
 		onReset?: () => void;
 		fullWidth?: boolean;
 	}
@@ -16,6 +17,7 @@
 
 	// Export modal state
 	let showExportModal = $state(false);
+	let showGlobalSearch = $state(false);
 
 	function getInitialTab(): 'all' | 'friends' | 'groups' | 'official' {
 		if (browser) {
@@ -54,11 +56,13 @@
 	const SWIPE_THRESHOLD = 50;
 
 	function handleTouchStart(event: TouchEvent) {
+		if (showGlobalSearch) return;
 		touchStartX = event.touches[0].clientX;
 		touchStartY = event.touches[0].clientY;
 	}
 
 	function handleTouchEnd(event: TouchEvent) {
+		if (showGlobalSearch) return;
 		const touchEndX = event.changedTouches[0].clientX;
 		const touchEndY = event.changedTouches[0].clientY;
 		const deltaX = touchEndX - touchStartX;
@@ -76,8 +80,20 @@
 		}
 	}
 
-	function selectChat(id: string) {
-		onselect?.(id);
+	function selectChat(id: string, options?: { messageId?: number }) {
+		onselect?.(id, options);
+	}
+
+	function handleSelectMessage(chatId: string, messageId: number) {
+		selectChat(chatId, { messageId });
+	}
+
+	function openGlobalSearch() {
+		showGlobalSearch = true;
+	}
+
+	function closeGlobalSearch() {
+		showGlobalSearch = false;
 	}
 
 	function formatTime(timestamp: number): string {
@@ -106,7 +122,7 @@
 </script>
 
 <div
-	class="flex h-full flex-col border-r border-gray-200 bg-[#E8F4F8]"
+	class="relative flex h-full flex-col border-r border-gray-200 bg-[#E8F4F8]"
 	class:w-80={!fullWidth}
 	class:w-full={fullWidth}
 	ontouchstart={handleTouchStart}
@@ -117,28 +133,40 @@
 	<!-- Fixed Header -->
 	<div class="shrink-0">
 		<!-- Header / Search -->
-		<div class="flex items-center justify-between bg-[#7CC5E6] p-4 text-white">
-			<h1 class="text-xl font-bold">トーク</h1>
-			<div class="flex items-center gap-2">
-				<button
-					onclick={() => (showExportModal = true)}
-					class="flex items-center gap-1 rounded-lg bg-white/20 px-2 py-1 text-sm transition-colors hover:bg-white/30"
-					title="全トーク履歴をエクスポート"
-				>
-					<Icon icon="mdi:download" class="h-4 w-4" />
-					<span class="hidden sm:inline">エクスポート</span>
-				</button>
-				{#if onReset}
+		<div class="bg-[#7CC5E6] p-4 text-white">
+			<div class="mb-3 flex items-center justify-between">
+				<h1 class="text-xl font-bold">トーク</h1>
+				<div class="flex items-center gap-2">
 					<button
-						onclick={onReset}
+						onclick={() => (showExportModal = true)}
 						class="flex items-center gap-1 rounded-lg bg-white/20 px-2 py-1 text-sm transition-colors hover:bg-white/30"
-						title="データをリセット"
+						title="全トーク履歴をエクスポート"
 					>
-						<Icon icon="mdi:delete-outline" class="h-4 w-4" />
-						<span class="hidden sm:inline">リセット</span>
+						<Icon icon="mdi:download" class="h-4 w-4" />
+						<span class="hidden sm:inline">エクスポート</span>
 					</button>
-				{/if}
+					{#if onReset}
+						<button
+							onclick={onReset}
+							class="flex items-center gap-1 rounded-lg bg-white/20 px-2 py-1 text-sm transition-colors hover:bg-white/30"
+							title="データをリセット"
+						>
+							<Icon icon="mdi:delete-outline" class="h-4 w-4" />
+							<span class="hidden sm:inline">リセット</span>
+						</button>
+					{/if}
+				</div>
 			</div>
+
+			<button
+				type="button"
+				onclick={openGlobalSearch}
+				class="flex w-full items-center gap-2 rounded-full bg-white/25 px-3 py-2 text-sm text-white/95 transition-colors hover:bg-white/30"
+				aria-label="トーク全体検索を開く"
+			>
+				<Icon icon="mdi:magnify" class="h-5 w-5 shrink-0 text-white/90" />
+				<span>検索</span>
+			</button>
 		</div>
 
 		<!-- Tabs -->
@@ -200,6 +228,16 @@
 			</button>
 		{/each}
 	</div>
+
+	<!-- Global Search Panel -->
+	{#if showGlobalSearch}
+		<ChatGlobalSearchPanel
+			{chats}
+			onSelectChat={selectChat}
+			onSelectMessage={handleSelectMessage}
+			onClose={closeGlobalSearch}
+		/>
+	{/if}
 </div>
 
 <!-- Export All Modal -->

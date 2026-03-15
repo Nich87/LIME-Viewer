@@ -11,6 +11,8 @@
 	let { message, isMe }: Props = $props();
 
 	const link = $derived(message.attachment?.link);
+	const linkTitle = $derived(link?.title || message.content || link?.url || '');
+	const linkSubText = $derived(link?.subText);
 
 	const bubbleClass = $derived(`${getMediaBubbleStyle(isMe)}`);
 </script>
@@ -18,7 +20,10 @@
 {#if link}
 	<div class={bubbleClass}>
 		<div class="px-4 py-2 text-sm">
-			<p class="wrap-break-word whitespace-pre-wrap">{message.content}</p>
+			<p class="wrap-break-word whitespace-pre-wrap">{linkTitle}</p>
+			{#if linkSubText}
+				<p class="mt-1 text-xs text-[--line-text-soft]">{linkSubText}</p>
+			{/if}
 		</div>
 		<a
 			href={link.url}

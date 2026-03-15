@@ -10,7 +10,7 @@ import { contactsService } from './contacts';
 import { mediaService } from './media';
 import { bubbleAssetService } from './bubbleAssets';
 import { storageService } from './storage';
-import { determineAttachment } from './messageParser';
+import { determineAttachment, extractMessageRelation } from './messageParser';
 
 export class DatabaseError extends Error {
 	constructor(
@@ -65,23 +65,55 @@ class DatabaseService {
 		return fallback;
 	}
 
+	private getSyntheticMessageContent(
+		type: MessageType,
+		fromId: string,
+		fromName?: string
+	): string | null {
+		const actorName =
+			fromName || (fromId ? contactsService.getContactName(fromId) : undefined) || '誰か';
+
+		if (type === MessageType.CHAT_ROOM_BGM_UPDATED) {
+			return `${actorName}がBGMを設定しました。`;
+		}
+		if (type === MessageType.CHAT_ROOM_BGM_DELETED) {
+			return `${actorName}がBGMを削除しました。`;
+		}
+		if (type === MessageType.LINK_PREVIEW) {
+			return '[リンク]';
+		}
+		return null;
+	}
+
 	private mapMessageRow(rowObj: Record<string, unknown>, fallbackChatId = ''): Message {
 		const fromId = this.toString(rowObj.from_mid);
 		const chatId = this.toString(rowObj.chat_id, fallbackChatId);
 		const isMe = !fromId || fromId === '';
+		const fromName = fromId ? contactsService.getContactName(fromId) : undefined;
+		const type = this.toNumber(rowObj.type) as MessageType;
+		const messageId = this.toNumber(rowObj.id);
+		const content = rowObj.content == null ? null : this.toString(rowObj.content);
+		const syntheticContent = !content
+			? this.getSyntheticMessageContent(type, fromId, fromName)
+			: null;
+		const resolvedContent = syntheticContent ?? content;
 
 		return {
-			id: this.toNumber(rowObj.id),
+			id: messageId,
 			serverId: this.toString(rowObj.server_id),
-			type: this.toNumber(rowObj.type) as MessageType,
+			type,
 			attachmentType: this.toNumber(rowObj.attachement_type),
 			chatId,
 			fromId: fromId || '',
-			fromName: fromId ? contactsService.getContactName(fromId) : undefined,
-			content: rowObj.content == null ? null : this.toString(rowObj.content),
+			fromName,
+			content: resolvedContent,
 			timestamp: this.toNumber(rowObj.created_time),
 			isMe,
 			status: this.toNumber(rowObj.status) === 3 ? 'read' : 'sent',
+			relation:
+				rowObj.parameter == null
+					? undefined
+					: extractMessageRelation(this.toString(rowObj.parameter)),
 			attachment: determineAttachment(rowObj, chatId)
 		};
 	}
@@ -141,15 +173,32 @@ class DatabaseService {
 			console.warn('Failed to load groups table:', error);
 		}
 
+		const keepMemoChatIds = new Set<string>();
+		try {
+			const keepMemoRows = this.queryRows(
+				'SELECT DISTINCT chat_id FROM chat_history WHERE type = ?',
+				[MessageType.CREATE_MEMO_CHAT]
+			);
+			for (const rowObj of keepMemoRows) {
+				const keepMemoChatId = this.toString(rowObj.chat_id);
+				if (keepMemoChatId) keepMemoChatIds.add(keepMemoChatId);
+			}
+		} catch (error) {
+			console.warn('Failed to detect Keep Memo chats:', error);
+		}
+
 		const chatRooms: ChatRoom[] = [];
 		for (const rowObj of rows) {
 			const chatId = this.toString(rowObj.chat_id);
 			if (!chatId) continue;
 
 			const isGroup = groupsMap.has(chatId);
+			const isKeepMemo = keepMemoChatIds.has(chatId);
 			let name = this.toString(rowObj.chat_name);
 
-			if (isGroup) {
+			if (isKeepMemo) {
+				name = 'Keepメモ';
+			} else if (isGroup) {
 				name = groupsMap.get(chatId) ?? name;
 			} else if (!name) {
 				const contactName = contactsService.getContactName(chatId);

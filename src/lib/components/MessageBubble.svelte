@@ -14,10 +14,15 @@
 		ContactBubble,
 		MusicBubble,
 		FlexBubble,
+		RichContentBubble,
 		PostBubble,
 		VoiceBubble,
 		LinkBubble,
 		ImageBubble,
+		VideoBubble,
+		PaymentTransferBubble,
+		GiftBubble,
+		UndecryptedBubble,
 		TextBubble
 	} from './bubbles';
 
@@ -32,9 +37,13 @@
 	// Check if this is a group event message
 	const isGroupEvent = $derived(message.attachment?.type === 'groupEvent');
 
-	// Check if this is a pure system message (type=17, no special attachment)
+	// Check if this is a pure system message (e.g. type=17/30, no special attachment)
 	const isSystemMessage = $derived(
-		message.type === MessageType.SYSTEM && !isGroupEvent && !message.attachment?.type
+		(message.type === MessageType.SYSTEM ||
+			message.type === MessageType.CHAT_ROOM_BGM_UPDATED ||
+			message.type === MessageType.CHAT_ROOM_BGM_DELETED) &&
+			!isGroupEvent &&
+			!message.attachment?.type
 	);
 
 	// LINE Music modal state
@@ -57,18 +66,26 @@
 		const attachmentType = attachment?.type;
 
 		if (messageType === MessageType.STICKER && attachmentType === 'sticker') return 'sticker';
-		if (messageType === MessageType.CALL && attachment?.call) return 'call';
+		if ((messageType === MessageType.CALL || attachmentType === 'call') && attachment?.call) {
+			return 'call';
+		}
 
 		const bubbleMap = {
 			location: 'location',
 			file: 'file',
 			contact: 'contact',
+			deviceContact: 'contact',
 			music: 'music',
 			flex: 'flex',
+			richContent: 'richContent',
 			post: 'post',
 			voice: 'voice',
 			link: 'link',
-			image: 'image'
+			image: 'image',
+			video: 'video',
+			paymentTransfer: 'paymentTransfer',
+			gift: 'gift',
+			e2eeUndecrypted: 'e2eeUndecrypted'
 		} as const;
 
 		return attachmentType && bubbleMap[attachmentType as keyof typeof bubbleMap]
@@ -140,6 +157,8 @@
 					<MusicBubble {message} isMe={message.isMe} onOpenModal={openMusicModal} />
 				{:else if bubbleType === 'flex'}
 					<FlexBubble {message} isMe={message.isMe} />
+				{:else if bubbleType === 'richContent'}
+					<RichContentBubble {message} isMe={message.isMe} />
 				{:else if bubbleType === 'post'}
 					<PostBubble {message} isMe={message.isMe} />
 				{:else if bubbleType === 'voice'}
@@ -148,6 +167,14 @@
 					<LinkBubble {message} isMe={message.isMe} />
 				{:else if bubbleType === 'image'}
 					<ImageBubble {message} isMe={message.isMe} {onImageClick} />
+				{:else if bubbleType === 'video'}
+					<VideoBubble {message} isMe={message.isMe} />
+				{:else if bubbleType === 'paymentTransfer'}
+					<PaymentTransferBubble {message} isMe={message.isMe} />
+				{:else if bubbleType === 'gift'}
+					<GiftBubble {message} isMe={message.isMe} />
+				{:else if bubbleType === 'e2eeUndecrypted'}
+					<UndecryptedBubble {message} isMe={message.isMe} />
 				{:else}
 					<TextBubble {message} isMe={message.isMe} />
 				{/if}

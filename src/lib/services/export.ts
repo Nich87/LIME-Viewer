@@ -33,7 +33,8 @@ const ATTACHMENT_TEXT_MAP: Record<string, string> = {
 
 // Message type to text mapping
 const MESSAGE_TYPE_TEXT_MAP: Partial<Record<MessageType, string>> = {
-	[MessageType.VIDEO]: '[動画]'
+	[MessageType.VIDEO]: '[動画]',
+	[MessageType.LINK_PREVIEW]: '[リンク]'
 } as const;
 
 /**
@@ -60,7 +61,14 @@ function getMessageContentText(message: Message, options: ExportOptions = {}): s
 	}
 
 	// System message
-	if (type === MessageType.SYSTEM) return content || '';
+	if (
+		(type === MessageType.SYSTEM ||
+			type === MessageType.CHAT_ROOM_BGM_UPDATED ||
+			type === MessageType.CHAT_ROOM_BGM_DELETED) &&
+		!attachment?.type
+	) {
+		return content || '';
+	}
 
 	// Simple attachment types
 	if (type === MessageType.STICKER || attachment?.type === 'sticker') {
@@ -81,7 +89,7 @@ function getMessageContentText(message: Message, options: ExportOptions = {}): s
 	}
 
 	// Call
-	if (type === MessageType.CALL && attachment?.call) {
+	if ((type === MessageType.CALL || attachment?.type === 'call') && attachment?.call) {
 		return formatCallText(attachment.call);
 	}
 
@@ -100,7 +108,23 @@ function getMessageContentText(message: Message, options: ExportOptions = {}): s
 function formatCallText(call: NonNullable<Message['attachment']>['call']): string {
 	if (!call) return '';
 
-	const callType = call.type === 'video' ? 'ビデオ通話' : '音声通話';
+	const baseType =
+		call.type === 'live'
+			? 'ライブ'
+			: call.type === 'photoBooth'
+				? 'フォトブース'
+				: call.type === 'video'
+					? 'ビデオ通話'
+					: '音声通話';
+	const callType = `${call.scope === 'group' ? 'グループ' : ''}${baseType}`;
+
+	if (call.scope === 'group') {
+		if (call.groupState === 'invited') return `☎ ${callType}への招待`;
+		if (call.groupState === 'started') return `☎ ${callType}が開始されました`;
+		if (call.groupState === 'ended') {
+			return call.duration ? `☎ ${callType} ${formatCallDuration(call.duration)}` : `☎ ${callType}`;
+		}
+	}
 
 	switch (call.result) {
 		case 'normal':
@@ -132,18 +156,39 @@ function formatComplexAttachment(
 				: null;
 		case 'contact':
 			return attachment.contact ? `[連絡先: ${attachment.contact.displayName}]` : null;
+		case 'deviceContact':
+			return attachment.deviceContact
+				? `[端末の連絡先: ${attachment.deviceContact.displayName || 'Unknown'}]`
+				: null;
 		case 'music':
 			if (!attachment.music) return null;
 			return attachment.music.artist
 				? `♪ ${attachment.music.title} - ${attachment.music.artist}`
 				: `♪ ${attachment.music.title}`;
+		case 'richContent':
+			return attachment.richContent?.altText || '[リッチメッセージ]';
 		case 'post':
 			if (!attachment.post) return null;
 			return attachment.post.type === 'album'
 				? `[アルバム${attachment.post.albumName ? `: ${attachment.post.albumName}` : ''}]`
 				: '[ノート]';
 		case 'link':
-			return attachment.link?.url || content || '';
+			if (!attachment.link) return content || '';
+			return attachment.link.title || attachment.link.url || content || '';
+		case 'paymentTransfer':
+			if (!attachment.paymentTransfer) return null;
+			return (
+				attachment.paymentTransfer.notificationText ||
+				attachment.paymentTransfer.priceText ||
+				content ||
+				'[送金・送金依頼]'
+			);
+		case 'gift':
+			return attachment.gift?.productType
+				? `[LINEギフト: ${attachment.gift.productType}]`
+				: '[LINEギフト]';
+		case 'e2eeUndecrypted':
+			return '[暗号化メッセージ]';
 		default:
 			return null;
 	}

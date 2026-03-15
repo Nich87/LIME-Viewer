@@ -110,13 +110,27 @@ export function getGroupEventText(locKey: string, actorName?: string, targetName
 		case 'A_MC':
 			return `${actor}が${target}をグループに追加しました。`;
 		case 'C_MI':
+		case 'C_GI':
+		case 'A_MI':
 			return `${actor}が${target}を招待しました。`;
-		case 'C_MA':
+		case 'C_MJ':
+		case 'A_MJ':
 			return `${actor}がグループに参加しました。`;
-		case 'C_ME':
+		case 'C_ML':
+		case 'A_ML':
 			return `${actor}がグループを退出しました。`;
-		case 'C_MK':
+		case 'C_MR':
+		case 'A_MR':
 			return `${actor}が${target}をグループから削除しました。`;
+		case 'C_IC':
+		case 'A_IC':
+			return `${actor}がグループへの招待を拒否しました。`;
+		case 'C_MA':
+			return `${actor}がアナウンスしました。`;
+		case 'C_PN':
+			return `グループ名が変更されました。`;
+		case 'C_PI':
+			return `グループ画像が変更されました。`;
 		default:
 			return `グループイベント: ${locKey}`;
 	}

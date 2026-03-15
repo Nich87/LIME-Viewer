@@ -16,20 +16,11 @@
 		<link rel="manifest" href="/site.webmanifest" />
 		<script>
 			(() => {
-				const THEME_KEY = 'lime-viewer-theme';
-				let savedTheme = null;
-				try {
-					savedTheme = localStorage.getItem(THEME_KEY);
-				} catch {
-					savedTheme = null;
-				}
-				const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-				const isDark = savedTheme ? savedTheme === 'dark' : prefersDark;
-				document.documentElement.classList.toggle('dark', isDark);
-				document.documentElement.style.colorScheme = isDark ? 'dark' : 'light';
+				document.documentElement.classList.remove('dark');
+				document.documentElement.style.colorScheme = 'light';
 				const themeColorMeta = document.querySelector('meta[name="theme-color"]');
 				if (themeColorMeta) {
-					themeColorMeta.setAttribute('content', isDark ? '#0f172a' : '#06c755');
+					themeColorMeta.setAttribute('content', '#06c755');
 				}
 			})();
 		</script>

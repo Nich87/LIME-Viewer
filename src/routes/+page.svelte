@@ -6,7 +6,12 @@
 	import SplashScreen from '$lib/components/SplashScreen.svelte';
 	import FileUpload from '$lib/components/FileUpload.svelte';
 	import type { ChatRoom, Message } from '$lib/schema';
-	import { databaseService, contactsService, mediaService } from '$lib/services';
+	import {
+		bubbleAssetService,
+		databaseService,
+		contactsService,
+		mediaService
+	} from '$lib/services';
 
 	let chats: ChatRoom[] = $state([]);
 	let messages: Message[] = $state([]);
@@ -19,6 +24,7 @@
 	let appReady = $state(false);
 
 	let isDataLoaded = $state(false);
+	let hasStoredDatabase = $state(false);
 
 	let isRestoring = $state(false);
 	let initializedHistoryState = false;
@@ -34,6 +40,7 @@
 	async function initializeFromStorage() {
 		if (!databaseService.isInitialized()) {
 			const hasStoredData = await databaseService.hasStoredData();
+			hasStoredDatabase = hasStoredData;
 			if (hasStoredData) {
 				isRestoring = true;
 				try {
@@ -50,18 +57,29 @@
 							console.warn('Failed to restore media from storage:', mediaError);
 						}
 
-						isDataLoaded = true;
-						if (isMobile) {
-							showSplash = true;
-						} else {
-							appReady = true;
+						let bubbleAssetsLoaded = false;
+						try {
+							bubbleAssetsLoaded = await bubbleAssetService.loadFromStorage();
+						} catch (bubbleAssetsError) {
+							console.warn('Failed to restore bubble assets from storage:', bubbleAssetsError);
+						}
+
+						if (bubbleAssetsLoaded) {
+							isDataLoaded = true;
+							if (isMobile) {
+								showSplash = true;
+							} else {
+								appReady = true;
+							}
 						}
 						loadChats();
 					} else {
+						hasStoredDatabase = false;
 						appReady = true;
 					}
 				} catch (e) {
 					console.error('Failed to restore database from storage:', e);
+					hasStoredDatabase = false;
 					appReady = true;
 				} finally {
 					isRestoring = false;
@@ -117,8 +135,12 @@
 
 	function handleUploadComplete() {
 		isDataLoaded = true;
+		hasStoredDatabase = true;
 		if (isMobile) {
 			showSplash = true;
+			appReady = false;
+		} else {
+			appReady = true;
 		}
 		loadChats();
 	}
@@ -180,6 +202,9 @@
 	async function handleReset() {
 		await databaseService.clearAllData();
 		isDataLoaded = false;
+		hasStoredDatabase = false;
+		showSplash = false;
+		appReady = false;
 		chats = [];
 		messages = [];
 		selectedChatId = null;
@@ -191,27 +216,23 @@
 
 <!-- Loading Screen during restoration -->
 {#if isRestoring}
-	<div
-		class="flex min-h-screen items-center justify-center bg-linear-to-br from-green-50 to-green-100 dark:from-slate-900 dark:to-slate-800"
-	>
+	<div class="flex min-h-screen items-center justify-center bg-[--line-app-bg]">
 		<div class="text-center">
 			<div
-				class="mb-4 inline-flex h-16 w-16 animate-spin items-center justify-center rounded-full border-4 border-green-200 border-t-green-600 dark:border-slate-700 dark:border-t-cyan-400"
+				class="mb-4 inline-flex h-16 w-16 animate-spin items-center justify-center rounded-full border-4 border-[#d9f5df] border-t-[--line-brand]"
 			></div>
-			<p class="text-gray-600 dark:text-slate-300">データを復元中...</p>
+			<p class="text-[--line-text-subtle]">データを復元中...</p>
 		</div>
 	</div>
 {:else if !isDataLoaded}
-	<FileUpload onComplete={handleUploadComplete} />
+	<FileUpload onComplete={handleUploadComplete} {hasStoredDatabase} />
 {:else}
 	{#if showSplash}
 		<SplashScreen onComplete={handleSplashComplete} duration={1800} />
 	{/if}
 
 	{#if appReady}
-		<div
-			class="flex h-full w-full overflow-hidden bg-white font-sans text-gray-800 dark:bg-slate-900 dark:text-slate-100"
-		>
+		<div class="flex h-full w-full overflow-hidden bg-[--line-surface] text-[--line-text]">
 			{#if isMobile}
 				{#if selectedChat}
 					<div class="h-full w-full overflow-hidden">
@@ -251,10 +272,16 @@
 						/>
 					{:else}
 						<div
-							class="flex h-full flex-col items-center justify-center bg-gray-50 text-gray-400 dark:bg-slate-800 dark:text-slate-400"
+							class="line-chat-wallpaper flex h-full flex-col items-center justify-center text-white/85"
 						>
-							<div class="mb-4 text-6xl">💬</div>
-							<p>チャットを選択してください</p>
+							<div
+								class="mb-4 flex h-18 w-18 items-center justify-center rounded-full bg-white/18 backdrop-blur-sm"
+							>
+								<span class="text-4xl">💬</span>
+							</div>
+							<p class="rounded-full bg-black/18 px-4 py-2 text-sm font-medium backdrop-blur-sm">
+								チャットを選択してください
+							</p>
 						</div>
 					{/if}
 				</div>

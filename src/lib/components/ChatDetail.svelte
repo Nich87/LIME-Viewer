@@ -259,20 +259,20 @@
 		const prevSelected = isPrevMessageSelected(index);
 		const nextSelected = isNextMessageSelected(index);
 
-		let classes = 'bg-sky-300/50 -mx-4 px-4';
+		let classes = 'bg-white/45 -mx-3 px-3';
 
 		if (prevSelected && nextSelected) {
 			// Middle of selection - no rounding, overlap margins
 			classes += ' -my-0.5 py-0.5';
 		} else if (prevSelected) {
 			// Last in selection - round bottom
-			classes += ' rounded-b-2xl -mt-0.5 pt-0.5 pb-2';
+			classes += ' rounded-b-[24px] -mt-0.5 pt-0.5 pb-2';
 		} else if (nextSelected) {
 			// First in selection - round top
-			classes += ' rounded-t-2xl pt-2 -mb-0.5 pb-0.5';
+			classes += ' rounded-t-[24px] pt-2 -mb-0.5 pb-0.5';
 		} else {
 			// Single selection - round all
-			classes += ' rounded-2xl py-2';
+			classes += ' rounded-[24px] py-2';
 		}
 
 		return classes;
@@ -394,7 +394,6 @@
 		// Create a container that clones the actual message elements
 		// Use fixed positioning within viewport but behind everything (z-index: -9999)
 		const container = document.createElement('div');
-		const isDarkTheme = document.documentElement.classList.contains('dark');
 		container.style.cssText = `
 			position: fixed;
 			left: 0;
@@ -402,7 +401,7 @@
 			z-index: -9999;
 			pointer-events: none;
 			width: ${viewport?.clientWidth || 400}px;
-			background-color: ${isDarkTheme ? '#1e293b' : '#96C2CF'};
+			background: linear-gradient(180deg, #95b5df 0%, #8cabd8 100%);
 			padding: 16px;
 		`;
 
@@ -601,32 +600,48 @@
 	}
 </script>
 
-<div class="flex h-full flex-col bg-[#96C2CF] dark:bg-slate-800">
+<div class="relative isolate flex h-full flex-col bg-[--line-surface]">
 	<!-- Header (always shown, search panel is an overlay) -->
 	<div
-		class="sticky top-0 z-10 flex h-14 shrink-0 items-center justify-between bg-[#7CC5E6] px-4 shadow-sm dark:bg-slate-700"
+		class="sticky top-0 z-10 flex h-15 shrink-0 items-center justify-between border-b border-[--line-border] bg-[--line-surface] px-3 sm:px-4"
 	>
-		<div class="flex items-center text-white">
+		<div class="flex min-w-0 items-center">
 			{#if onBack}
 				<button
-					class="mr-3 rounded p-1 transition-colors hover:bg-white/20"
+					type="button"
+					class="line-icon-button mr-2 flex h-9 w-9 items-center justify-center"
 					onclick={onBack}
 					aria-label="戻る"
 				>
 					<Icon icon="mdi:chevron-left" class="h-6 w-6" />
 				</button>
 			{/if}
-			<h2 class="text-lg font-bold">{chat.name}</h2>
-			{#if chat.memberCount}
-				<span class="ml-2 text-sm opacity-90">({chat.memberCount})</span>
-			{/if}
+			<div class="min-w-0">
+				<h2 class="truncate text-[16px] font-semibold text-[--line-text]">{chat.name}</h2>
+				{#if chat.memberCount}
+					<span class="mt-0.5 block text-[12px] text-[--line-text-soft]">
+						メンバー {chat.memberCount}
+					</span>
+				{/if}
+			</div>
 		</div>
-		<div class="flex space-x-4 text-white">
-			<button aria-label="検索" onclick={openSearch}>
+		<div class="ml-4 flex items-center gap-1">
+			<button
+				type="button"
+				class="line-icon-button flex h-9 w-9 items-center justify-center"
+				aria-label="検索"
+				onclick={openSearch}
+			>
 				<Icon icon="mdi:magnify" class="h-5 w-5" />
 			</button>
-			<button aria-label="エクスポート" onclick={openExportModal} title="トーク履歴をエクスポート">
-				<Icon icon="mdi:download" class="h-5 w-5" />
+			<button
+				type="button"
+				class="line-icon-button flex h-9 w-9 items-center justify-center"
+				aria-label="エクスポート"
+				onclick={openExportModal}
+				title="トーク履歴をエクスポート"
+			>
+				<Icon icon="mdi:download-outline" class="h-5 w-5" />
 			</button>
 		</div>
 	</div>
@@ -634,7 +649,7 @@
 	<!-- Message Area -->
 	<div
 		bind:this={viewport}
-		class="bg-opacity-50 relative flex-1 overflow-y-auto p-4"
+		class="line-chat-wallpaper relative flex-1 overflow-y-auto px-3 py-4 sm:px-4"
 		class:pb-28={selectionMode}
 	>
 		{#if loading}
@@ -647,7 +662,7 @@
 			<!-- Date Separator -->
 			{#if i === 0 || getDateString(messages[i].timestamp) !== getDateString(messages[i - 1].timestamp)}
 				<div class="my-4 flex justify-center" use:registerDateSeparatorRef={i}>
-					<span class="bg-opacity-20 rounded-full bg-black px-3 py-1 text-xs text-white">
+					<span class="line-system-chip px-3 py-1 text-[11px] font-medium shadow-sm">
 						{getDateString(msg.timestamp)}
 					</span>
 				</div>
@@ -659,11 +674,11 @@
 					i,
 					selectedMessageIds.has(msg.id)
 				)}"
-				class:bg-yellow-200={highlightedMessageId === msg.id}
-				class:bg-opacity-50={highlightedMessageId === msg.id}
-				class:rounded-lg={highlightedMessageId === msg.id}
+				class:bg-yellow-100={highlightedMessageId === msg.id}
+				class:bg-opacity-70={highlightedMessageId === msg.id}
+				class:rounded-2xl={highlightedMessageId === msg.id}
 				class:ring-2={highlightedMessageId === msg.id}
-				class:ring-yellow-400={highlightedMessageId === msg.id}
+				class:ring-white={highlightedMessageId === msg.id}
 				role="button"
 				tabindex="0"
 				onpointerdown={(e) => handleMessagePointerDown(e, msg.id)}
@@ -686,45 +701,55 @@
 
 	<!-- Input Area (Read Only) -->
 	{#if searchNavigation && !showSearch}
-		<div
-			class="border-t border-[#8F6F69] bg-[#8F6F69] px-3 py-2 text-white dark:border-slate-700 dark:bg-slate-900"
-		>
+		<div class="border-t border-[--line-border] bg-[--line-surface] px-3 py-2">
 			<div class="flex items-center justify-between">
 				<div class="flex items-center gap-1">
 					<button
-						class="rounded p-2 transition-colors hover:bg-white/15"
+						type="button"
+						class="line-icon-button flex h-9 w-9 items-center justify-center"
 						onclick={() => navigateSearchResult('prev')}
 						aria-label="前の検索結果へ移動"
 					>
-						<Icon icon="mdi:chevron-up" class="h-6 w-6" />
+						<Icon icon="mdi:chevron-up" class="h-5 w-5" />
 					</button>
 					<button
-						class="rounded p-2 transition-colors hover:bg-white/15"
+						type="button"
+						class="line-icon-button flex h-9 w-9 items-center justify-center"
 						onclick={() => navigateSearchResult('next')}
 						aria-label="次の検索結果へ移動"
 					>
-						<Icon icon="mdi:chevron-down" class="h-6 w-6" />
+						<Icon icon="mdi:chevron-down" class="h-5 w-5" />
 					</button>
-					<span class="ml-3 text-2xl font-semibold">
+					<span class="ml-2 text-sm font-semibold text-[--line-text]">
 						{searchNavigation.currentIndex + 1} / {searchNavigation.resultIds.length}
 					</span>
 				</div>
 
 				<button
-					class="rounded p-2 transition-colors hover:bg-white/15"
+					type="button"
+					class="line-chip-button flex h-9 items-center gap-1 px-3 text-sm font-medium"
 					onclick={openCalendarFromSearchNavigation}
 					aria-label="カレンダーで日付を選択"
 				>
-					<Icon icon="mdi:calendar" class="h-7 w-7" />
+					<Icon icon="mdi:calendar-month-outline" class="h-4 w-4" />
+					日付
 				</button>
 			</div>
 		</div>
 	{:else}
-		<div class="border-t border-gray-200 bg-white p-3 dark:border-slate-700 dark:bg-slate-900">
-			<div
-				class="w-full rounded bg-gray-100 p-2 text-center text-sm text-gray-500 dark:bg-slate-800 dark:text-slate-300"
-			>
-				これは読み取り専用のアーカイブです
+		<div class="border-t border-[--line-border] bg-[--line-surface] px-3 py-2.5">
+			<div class="flex items-center gap-2">
+				<div
+					class="line-search-pill flex h-10 flex-1 items-center px-4 text-sm text-[--line-text-soft]"
+				>
+					これは読み取り専用のアーカイブです
+				</div>
+				<div
+					class="flex h-10 w-10 items-center justify-center rounded-full bg-[--line-surface-alt] text-[--line-text-faint]"
+					aria-hidden="true"
+				>
+					<Icon icon="mdi:lock-outline" class="h-5 w-5" />
+				</div>
 			</div>
 		</div>
 	{/if}

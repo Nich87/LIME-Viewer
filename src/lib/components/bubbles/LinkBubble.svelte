@@ -12,9 +12,7 @@
 
 	const link = $derived(message.attachment?.link);
 
-	const bubbleClass = $derived(
-		`${getMediaBubbleStyle(isMe)} ${isMe ? 'bg-[#B8E986]' : 'bg-white dark:bg-slate-700'}`
-	);
+	const bubbleClass = $derived(`${getMediaBubbleStyle(isMe)}`);
 </script>
 
 {#if link}
@@ -27,14 +25,14 @@
 			target="_blank"
 			rel="noopener external"
 			class="block border-t {isMe
-				? 'border-green-300 bg-green-50'
-				: 'border-gray-100 bg-gray-50 dark:border-slate-600 dark:bg-slate-800'}"
+				? 'border-[--line-bubble-send-divider] bg-white/35'
+				: 'border-[--line-border] bg-[--line-surface-alt]'}"
 		>
 			<div class="flex items-center px-3 py-2">
-				<div class="mr-2 flex h-8 w-8 shrink-0 items-center justify-center rounded bg-blue-100">
-					<Icon icon="heroicons:link-solid" class="h-4 w-4 text-blue-600" />
+				<div class="mr-2 flex h-8 w-8 shrink-0 items-center justify-center rounded-[10px] bg-white">
+					<Icon icon="heroicons:link-solid" class="h-4 w-4 text-[--line-brand]" />
 				</div>
-				<span class="truncate text-xs text-blue-600">{link.url}</span>
+				<span class="truncate text-xs text-[--line-brand]">{link.url}</span>
 			</div>
 		</a>
 	</div>

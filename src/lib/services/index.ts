@@ -2,6 +2,7 @@ export { databaseService } from './database';
 export { contactsService } from './contacts';
 export { mediaService } from './media';
 export { storageService } from './storage';
+export { bubbleAssetService } from './bubbleAssets';
 export { determineAttachment } from './messageParser';
 export {
 	exportAsText,

@@ -8,6 +8,7 @@ import type { ChatRoom, GlobalMessageSearchResult, Message } from '$lib/schema';
 import { MessageType } from '$lib/schema';
 import { contactsService } from './contacts';
 import { mediaService } from './media';
+import { bubbleAssetService } from './bubbleAssets';
 import { storageService } from './storage';
 import { determineAttachment } from './messageParser';
 
@@ -249,6 +250,7 @@ class DatabaseService {
 		this.close();
 		contactsService.clear();
 		mediaService.clear();
+		bubbleAssetService.clear();
 		await storageService.clearAll();
 	}
 }

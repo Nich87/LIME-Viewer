@@ -17,12 +17,14 @@
 {#if file}
 	<div class={bubbleClass}>
 		<!-- File Icon -->
-		<div class="mr-3 flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-blue-100">
-			<Icon icon="heroicons:document-text-solid" class="h-6 w-6 text-blue-600" />
+		<div
+			class="mr-3 flex h-10 w-10 shrink-0 items-center justify-center rounded-[14px] bg-[--line-surface-alt]"
+		>
+			<Icon icon="heroicons:document-text-solid" class="h-6 w-6 text-[--line-brand]" />
 		</div>
 		<div class="flex flex-1 flex-col overflow-hidden">
 			<span class="truncate text-sm font-medium">{file.name}</span>
-			<span class="text-xs text-gray-500 dark:text-slate-400">{formatFileSize(file.size)}</span>
+			<span class="text-xs text-[--line-text-soft]">{formatFileSize(file.size)}</span>
 		</div>
 	</div>
 {/if}

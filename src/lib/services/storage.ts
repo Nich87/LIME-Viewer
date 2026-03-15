@@ -1,10 +1,11 @@
 const DB_NAME = 'lime-viewer-storage';
-const DB_VERSION = 2;
+const DB_VERSION = 3;
 
 const STORE_DATABASE = 'database';
 const STORE_CONTACTS = 'contacts';
 const STORE_MEDIA = 'media';
 const STORE_MEDIA_KEYS = 'media_keys';
+const STORE_BUBBLE_ASSETS = 'bubble_assets';
 
 const BATCH_SIZE = 50;
 
@@ -60,6 +61,10 @@ class StorageService {
 				if (!db.objectStoreNames.contains(STORE_MEDIA_KEYS)) {
 					db.createObjectStore(STORE_MEDIA_KEYS);
 				}
+
+				if (!db.objectStoreNames.contains(STORE_BUBBLE_ASSETS)) {
+					db.createObjectStore(STORE_BUBBLE_ASSETS);
+				}
 			};
 		});
 	}
@@ -108,6 +113,30 @@ class StorageService {
 			const request = store.get('csvContent');
 
 			request.onerror = () => reject(new Error('Failed to load contacts'));
+			request.onsuccess = () => resolve(request.result || null);
+		});
+	}
+
+	async saveBubbleAsset(key: string, blob: Blob): Promise<void> {
+		const db = await this.openDB();
+		return new Promise((resolve, reject) => {
+			const transaction = db.transaction(STORE_BUBBLE_ASSETS, 'readwrite');
+			const store = transaction.objectStore(STORE_BUBBLE_ASSETS);
+			const request = store.put(blob, key);
+
+			request.onerror = () => reject(new Error('Failed to save bubble asset'));
+			request.onsuccess = () => resolve();
+		});
+	}
+
+	async loadBubbleAsset(key: string): Promise<Blob | null> {
+		const db = await this.openDB();
+		return new Promise((resolve, reject) => {
+			const transaction = db.transaction(STORE_BUBBLE_ASSETS, 'readonly');
+			const store = transaction.objectStore(STORE_BUBBLE_ASSETS);
+			const request = store.get(key);
+
+			request.onerror = () => reject(new Error('Failed to load bubble asset'));
 			request.onsuccess = () => resolve(request.result || null);
 		});
 	}
@@ -314,7 +343,13 @@ class StorageService {
 
 	async clearAll(): Promise<void> {
 		const db = await this.openDB();
-		const stores = [STORE_DATABASE, STORE_CONTACTS, STORE_MEDIA, STORE_MEDIA_KEYS];
+		const stores = [
+			STORE_DATABASE,
+			STORE_CONTACTS,
+			STORE_MEDIA,
+			STORE_MEDIA_KEYS,
+			STORE_BUBBLE_ASSETS
+		];
 		const errors: string[] = [];
 
 		for (const storeName of stores) {

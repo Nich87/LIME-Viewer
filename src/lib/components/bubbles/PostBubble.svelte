@@ -19,14 +19,14 @@
 	<div class={bubbleClass}>
 		<!-- Icon based on type -->
 		<div
-			class="mr-3 flex h-10 w-10 shrink-0 items-center justify-center rounded-lg {isAlbum
-				? 'bg-blue-100'
-				: 'bg-yellow-100'}"
+			class="mr-3 flex h-10 w-10 shrink-0 items-center justify-center rounded-[14px] {isAlbum
+				? 'bg-[#e8f2ff]'
+				: 'bg-[#fff6d8]'}"
 		>
 			{#if isAlbum}
-				<Icon icon="heroicons:photo-solid" class="h-6 w-6 text-blue-600" />
+				<Icon icon="heroicons:photo-solid" class="h-6 w-6 text-[#4387bc]" />
 			{:else}
-				<Icon icon="heroicons:newspaper-solid" class="h-6 w-6 text-yellow-600" />
+				<Icon icon="heroicons:newspaper-solid" class="h-6 w-6 text-[#c08c16]" />
 			{/if}
 		</div>
 		<div class="flex flex-col overflow-hidden">
@@ -34,10 +34,10 @@
 				{isAlbum ? 'アルバム' : 'ノート'}に投稿しました
 			</span>
 			{#if post.albumName}
-				<span class="truncate text-xs text-gray-600 dark:text-slate-300">{post.albumName}</span>
+				<span class="truncate text-xs text-[--line-text-subtle]">{post.albumName}</span>
 			{/if}
 			{#if post.text}
-				<span class="truncate text-xs text-gray-600 dark:text-slate-300">{post.text}</span>
+				<span class="truncate text-xs text-[--line-text-subtle]">{post.text}</span>
 			{/if}
 		</div>
 	</div>

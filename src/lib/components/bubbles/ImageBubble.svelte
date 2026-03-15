@@ -36,15 +36,9 @@
 		</button>
 	{:else}
 		<!-- Placeholder when no URL available -->
-		<div class="flex h-40 w-56 items-center justify-center bg-gray-100">
-			<Icon icon="heroicons:photo-solid" class="h-12 w-12 text-gray-300" />
+		<div class="flex h-40 w-56 items-center justify-center bg-[--line-surface-alt]">
+			<Icon icon="heroicons:photo-solid" class="h-12 w-12 text-[--line-text-faint]" />
 		</div>
-		<div
-			class="px-3 py-1 text-center text-xs text-gray-400 dark:text-slate-400 {isMe
-				? 'bg-[#B8E986]'
-				: 'bg-white dark:bg-slate-700'}"
-		>
-			画像 (バックアップなし)
-		</div>
+		<div class="px-3 py-1 text-center text-xs text-[--line-text-soft]">画像 (バックアップなし)</div>
 	{/if}
 </div>

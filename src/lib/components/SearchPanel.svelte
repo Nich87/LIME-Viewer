@@ -196,124 +196,124 @@
 	});
 </script>
 
-<!-- Search Bar Overlay - Fixed position with visual viewport adjustment -->
 <div
-	bind:this={searchBarRef}
-	class="fixed right-0 left-0 z-120 flex h-14 items-center gap-2 bg-[#7CC5E6] px-3 shadow-sm dark:bg-slate-700"
-	style="top: {viewportOffset}px;"
+	class="absolute inset-0 z-[120] overflow-hidden"
+	style="background-color: var(--line-surface);"
 >
-	<button
-		onclick={onClose}
-		class="rounded-full p-1.5 text-white transition-colors hover:bg-white/20"
+	<div
+		class="relative flex h-full flex-col"
+		style="background-color: var(--line-surface); padding-top: {viewportOffset}px;"
 	>
-		<Icon icon="mdi:chevron-left" class="h-6 w-6" />
-	</button>
-
-	<div class="relative flex-1">
-		<input
-			type="text"
-			placeholder="検索"
-			bind:value={searchQuery}
-			class="w-full rounded-lg bg-white/90 py-2 pr-9 pl-9 text-sm text-gray-800 placeholder-gray-400 focus:bg-white focus:outline-none dark:bg-slate-900 dark:text-slate-100 dark:placeholder-slate-500 dark:focus:bg-slate-900"
-		/>
-		<Icon
-			icon="mdi:magnify"
-			class="absolute top-1/2 left-2.5 h-5 w-5 -translate-y-1/2 text-gray-400 dark:text-slate-500"
-		/>
-		{#if searchQuery}
-			<button onclick={clearSearch} class="absolute top-1/2 right-2.5 -translate-y-1/2">
-				<Icon
-					icon="mdi:close-circle"
-					class="h-5 w-5 text-gray-400 hover:text-gray-600 dark:text-slate-500 dark:hover:text-slate-300"
-				/>
+		<div
+			bind:this={searchBarRef}
+			class="flex h-14 shrink-0 items-center gap-2 border-b border-[--line-border] bg-[--line-surface] px-3"
+		>
+			<button onclick={onClose} class="line-icon-button flex h-9 w-9 items-center justify-center">
+				<Icon icon="mdi:chevron-left" class="h-6 w-6" />
 			</button>
-		{/if}
-	</div>
 
-	<button
-		onclick={onOpenCalendar}
-		class="rounded-full p-1.5 text-white transition-colors hover:bg-white/20"
-		aria-label="カレンダーで日付を選択"
-	>
-		<Icon icon="mdi:calendar" class="h-6 w-6" />
-	</button>
-</div>
-
-<!-- Suggestion Panel -->
-<div
-	class="fixed right-0 bottom-0 left-0 z-110 flex flex-col bg-[#A9DDEB] dark:bg-slate-800"
-	style="top: calc({viewportOffset}px + 56px);"
->
-	{#if !searchQuery.trim()}
-		<div
-			class="flex h-full items-center justify-center px-6 text-center text-sm text-[#4B97AD] dark:text-slate-300"
-		>
-			キーワードを入力すると候補が表示されます
-		</div>
-	{:else if isSearching}
-		<div
-			class="flex h-full items-center justify-center gap-2 text-sm text-[#4B97AD] dark:text-slate-300"
-		>
-			<Icon icon="mdi:loading" class="h-4 w-4 animate-spin" />
-			<span>検索中...</span>
-		</div>
-	{:else if searchResults.length === 0}
-		<div
-			class="flex h-full items-center justify-center px-6 text-center text-sm text-[#4B97AD] dark:text-slate-300"
-		>
-			検索結果がありません
-		</div>
-	{:else}
-		<div
-			class="shrink-0 border-b border-[#8EC5D6] bg-[#B6E5F0] px-4 pt-2 dark:border-slate-700 dark:bg-slate-900"
-		>
-			<div
-				class="inline-block border-b-2 border-[#F1709A] px-1 pb-1 text-sm font-semibold text-[#2D8FA5] dark:text-sky-200"
-			>
-				メッセージ
+			<div class="relative flex-1">
+				<input
+					type="text"
+					placeholder="検索"
+					bind:value={searchQuery}
+					class="line-search-pill h-9.5 w-full py-2 pr-9 pl-9 text-sm text-[--line-text] placeholder-[--line-text-faint] focus:outline-none"
+				/>
+				<Icon
+					icon="mdi:magnify"
+					class="absolute top-1/2 left-2.5 h-5 w-5 -translate-y-1/2 text-[--line-search-icon]"
+				/>
+				{#if searchQuery}
+					<button onclick={clearSearch} class="absolute top-1/2 right-2.5 -translate-y-1/2">
+						<Icon
+							icon="mdi:close-circle"
+							class="h-5 w-5 text-[--line-text-faint] hover:text-[--line-text-subtle]"
+						/>
+					</button>
+				{/if}
 			</div>
+
+			<button
+				onclick={onOpenCalendar}
+				class="line-chip-button flex h-9 items-center gap-1 px-3 text-sm font-medium"
+				aria-label="カレンダーで日付を選択"
+			>
+				<Icon icon="mdi:calendar-month-outline" class="h-4 w-4" />
+				日付
+			</button>
 		</div>
 
-		<div
-			class="shrink-0 border-b border-[#8EC5D6] bg-[#B6E5F0] px-4 py-2 text-sm font-semibold text-[#2D8FA5] dark:border-slate-700 dark:bg-slate-900 dark:text-sky-200"
-		>
-			メッセージ {searchResults.length}
-		</div>
-
-		<div class="min-h-0 flex-1 overflow-y-auto">
-			{#each searchResults as result (result.id)}
-				<button
-					class={`flex w-full items-start gap-3 border-b border-[#93C8D9]/70 px-4 py-3 text-left transition-colors hover:bg-white/30 dark:border-slate-700 dark:hover:bg-slate-700 ${
-						selectedResultId === result.id ? 'bg-white/35 dark:bg-slate-700' : ''
-					}`}
-					onclick={() => selectSearchResult(result.id)}
+		<div class="min-h-0 flex-1 bg-[--line-surface]">
+			{#if !searchQuery.trim()}
+				<div
+					class="flex h-full items-center justify-center bg-[--line-surface] px-6 text-center text-sm text-[--line-text-soft]"
 				>
+					キーワードを入力すると候補が表示されます
+				</div>
+			{:else if isSearching}
+				<div
+					class="flex h-full items-center justify-center gap-2 bg-[--line-surface] text-sm text-[--line-text-soft]"
+				>
+					<Icon icon="mdi:loading" class="h-4 w-4 animate-spin" />
+					<span>検索中...</span>
+				</div>
+			{:else if searchResults.length === 0}
+				<div
+					class="flex h-full items-center justify-center bg-[--line-surface] px-6 text-center text-sm text-[--line-text-soft]"
+				>
+					検索結果がありません
+				</div>
+			{:else}
+				<div class="shrink-0 border-b border-[--line-border] bg-[--line-surface] px-4 pt-2">
 					<div
-						class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#7DBFD5] text-sm font-semibold text-white dark:bg-slate-700"
+						class="inline-block border-b-2 border-[--line-text] px-1 pb-1 text-sm font-semibold text-[--line-text]"
 					>
-						{getAvatarText(result)}
+						メッセージ
 					</div>
+				</div>
 
-					<div class="min-w-0 flex-1">
-						<div class="flex items-start justify-between gap-3">
-							<p class="truncate text-sm font-semibold text-[#2C8FA5] dark:text-sky-200">
-								{getSenderName(result)}
-							</p>
-							<span class="shrink-0 text-xs text-[#5AA2B5] dark:text-slate-400">
-								{formatResultDate(result.timestamp)}
-							</span>
-						</div>
+				<div
+					class="shrink-0 border-b border-[--line-border] bg-[--line-surface] px-4 py-2 text-sm font-semibold text-[--line-text-subtle]"
+				>
+					メッセージ {searchResults.length}
+				</div>
 
-						<p class="mt-1 truncate text-sm text-[#3D95A7] dark:text-slate-300">
-							{#each buildPreviewParts(result, searchQuery) as part, i (i)}
-								<span class={part.matched ? 'font-semibold text-[#F1709A]' : ''}>
-									{part.text}
-								</span>
-							{/each}
-						</p>
-					</div>
-				</button>
-			{/each}
+				<div class="h-full min-h-0 overflow-y-auto bg-[--line-surface]">
+					{#each searchResults as result (result.id)}
+						<button
+							class={`flex w-full items-start gap-3 border-b border-[--line-border] bg-[--line-surface] px-4 py-3 text-left transition-colors hover:bg-[--line-surface-press] ${
+								selectedResultId === result.id ? 'bg-[--line-selection]' : ''
+							}`}
+							onclick={() => selectSearchResult(result.id)}
+						>
+							<div
+								class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#dde2ea] text-sm font-semibold text-[--line-text-subtle]"
+							>
+								{getAvatarText(result)}
+							</div>
+
+							<div class="min-w-0 flex-1">
+								<div class="flex items-start justify-between gap-3">
+									<p class="truncate text-sm font-semibold text-[--line-text]">
+										{getSenderName(result)}
+									</p>
+									<span class="shrink-0 text-xs text-[--line-text-faint]">
+										{formatResultDate(result.timestamp)}
+									</span>
+								</div>
+
+								<p class="mt-1 truncate text-sm text-[--line-text-subtle]">
+									{#each buildPreviewParts(result, searchQuery) as part, i (i)}
+										<span class={part.matched ? 'font-semibold text-[--line-brand]' : ''}>
+											{part.text}
+										</span>
+									{/each}
+								</p>
+							</div>
+						</button>
+					{/each}
+				</div>
+			{/if}
 		</div>
-	{/if}
+	</div>
 </div>

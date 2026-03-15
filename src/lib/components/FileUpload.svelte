@@ -1,19 +1,27 @@
 <script lang="ts">
-	import { databaseService, contactsService, mediaService } from '$lib/services';
+	import {
+		bubbleAssetService,
+		databaseService,
+		contactsService,
+		mediaService
+	} from '$lib/services';
 	import { formatFileSize } from '$lib/utils';
 	import Icon from '@iconify/svelte';
 	import { onMount } from 'svelte';
 
 	interface Props {
 		onComplete: () => void;
+		hasStoredDatabase?: boolean;
 	}
 
-	let { onComplete }: Props = $props();
+	let { onComplete, hasStoredDatabase = false }: Props = $props();
 
 	let dbFile: File | null = $state(null);
 	let csvFile: File | null = $state(null);
 	let backupFiles: FileList | null = $state(null);
 	let zipFile: File | null = $state(null);
+	let bubbleSendFile: File | null = $state(null);
+	let bubbleReceiveFile: File | null = $state(null);
 
 	let loading = $state(false);
 	let error = $state<string | null>(null);
@@ -31,6 +39,9 @@
 
 	// Animation states
 	let mounted = $state(false);
+
+	const hasDatabaseSource = $derived(Boolean(dbFile || hasStoredDatabase));
+	const hasBubbleAssets = $derived(Boolean(bubbleSendFile && bubbleReceiveFile));
 
 	onMount(() => {
 		isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
@@ -57,6 +68,38 @@
 		if (input.files && input.files.length > 0) csvFile = input.files[0];
 	}
 
+	function handleBubbleSendChange(e: Event) {
+		const input = e.target as HTMLInputElement;
+		const file = input.files?.[0];
+		if (!file) return;
+		if (!isValidBubbleFile(file)) {
+			error = 'チャットバブル画像は PNG ファイルを選択してください';
+			input.value = '';
+			bubbleSendFile = null;
+			return;
+		}
+		error = null;
+		bubbleSendFile = file;
+	}
+
+	function handleBubbleReceiveChange(e: Event) {
+		const input = e.target as HTMLInputElement;
+		const file = input.files?.[0];
+		if (!file) return;
+		if (!isValidBubbleFile(file)) {
+			error = 'チャットバブル画像は PNG ファイルを選択してください';
+			input.value = '';
+			bubbleReceiveFile = null;
+			return;
+		}
+		error = null;
+		bubbleReceiveFile = file;
+	}
+
+	function isValidBubbleFile(file: File): boolean {
+		return file.type === 'image/png' || file.name.toLowerCase().endsWith('.png');
+	}
+
 	function handleBackupChange(e: Event) {
 		const input = e.target as HTMLInputElement;
 		if (input.files && input.files.length > 0) {
@@ -74,8 +117,12 @@
 	}
 
 	async function handleSubmit() {
-		if (!dbFile) {
+		if (!dbFile && !hasStoredDatabase) {
 			error = 'データベースファイル(.db)は必須です';
+			return;
+		}
+		if (!bubbleSendFile || !bubbleReceiveFile) {
+			error = 'チャットバブル画像2枚は必須です';
 			return;
 		}
 
@@ -84,36 +131,53 @@
 		progressPercent = 0;
 
 		try {
+			if (dbFile && hasStoredDatabase) {
+				progress = '保存済みデータを置き換え中...';
+				progressPercent = 5;
+				await databaseService.clearAllData();
+			}
+
 			// 1. Load database
-			progress = 'データベースを読み込み中...';
-			progressPercent = 10;
-			const dbBuffer = await dbFile.arrayBuffer();
-			await databaseService.initialize(dbBuffer);
-			progressPercent = 40;
+			if (dbFile) {
+				progress = 'データベースを読み込み中...';
+				progressPercent = 10;
+				const dbBuffer = await dbFile.arrayBuffer();
+				await databaseService.initialize(dbBuffer);
+			} else {
+				progress = '保存済みデータベースを使用中...';
+			}
+			progressPercent = 35;
 
 			// 2. Load contacts CSV (optional)
 			if (csvFile) {
 				progress = '連絡先を読み込み中...';
-				progressPercent = 50;
+				progressPercent = 45;
 				const csvText = await csvFile.text();
 				await contactsService.initialize(csvText);
-				progressPercent = 60;
+				progressPercent = 55;
 			}
 
 			// 3. Load media files (optional)
 			if (zipFile) {
 				progress = 'ZIPファイルを解凍中...';
 				await mediaService.initializeFromZip(zipFile, (percent) => {
-					progressPercent = 60 + Math.floor(percent * 0.35);
+					progressPercent = 55 + Math.floor(percent * 0.3);
 					progress = `ZIPファイルを解凍中... ${percent}%`;
 				});
 			} else if (backupFiles && backupFiles.length > 0) {
 				progress = `メディアファイルを読み込み中...`;
-				progressPercent = 70;
+				progressPercent = 65;
 				await mediaService.initializeFromFolder(backupFiles);
-				progressPercent = 95;
+				progressPercent = 85;
 			}
 
+			// 4. Load bubble assets
+			progress = 'チャットバブル画像を読み込み中...';
+			progressPercent = 90;
+			await bubbleAssetService.initialize({
+				send: bubbleSendFile,
+				receive: bubbleReceiveFile
+			});
 			progressPercent = 100;
 			progress = '完了！';
 			await new Promise((resolve) => setTimeout(resolve, 500));
@@ -129,7 +193,8 @@
 	const steps = [
 		{ icon: 'mdi:database', label: 'データベース', color: 'emerald' },
 		{ icon: 'mdi:account-multiple', label: '連絡先', color: 'blue' },
-		{ icon: 'mdi:folder-image', label: 'メディア', color: 'purple' }
+		{ icon: 'mdi:folder-image', label: 'メディア', color: 'purple' },
+		{ icon: 'mdi:message-image-outline', label: 'バブル', color: 'amber' }
 	];
 </script>
 
@@ -204,17 +269,19 @@
 							<button
 								type="button"
 								class="group relative flex h-10 w-10 items-center justify-center rounded-full transition-all duration-300
-									{i === 0 && dbFile
+									{i === 0 && hasDatabaseSource
 									? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/30'
 									: i === 1 && csvFile
 										? 'bg-blue-500 text-white shadow-lg shadow-blue-500/30'
 										: i === 2 && (backupFiles || zipFile)
 											? 'bg-purple-500 text-white shadow-lg shadow-purple-500/30'
-											: 'border border-white/20 bg-white/5 text-white/40 hover:border-white/40 hover:bg-white/10'}"
+											: i === 3 && hasBubbleAssets
+												? 'bg-amber-500 text-white shadow-lg shadow-amber-500/30'
+												: 'border border-white/20 bg-white/5 text-white/40 hover:border-white/40 hover:bg-white/10'}"
 								onclick={() => (currentStep = i)}
 							>
 								<Icon icon={step.icon} class="h-5 w-5" />
-								{#if (i === 0 && dbFile) || (i === 1 && csvFile) || (i === 2 && (backupFiles || zipFile))}
+								{#if (i === 0 && hasDatabaseSource) || (i === 1 && csvFile) || (i === 2 && (backupFiles || zipFile)) || (i === 3 && hasBubbleAssets)}
 									<div
 										class="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-white"
 									>
@@ -236,11 +303,17 @@
 						<div class="mb-2 flex items-center gap-2">
 							<Icon icon="mdi:database" class="h-5 w-5 text-emerald-400" />
 							<span class="text-sm font-medium text-white/80">データベースファイル</span>
-							<span class="rounded bg-red-500/20 px-1.5 py-0.5 text-xs text-red-300">必須</span>
+							<span
+								class="rounded px-1.5 py-0.5 text-xs {hasStoredDatabase
+									? 'bg-emerald-500/20 text-emerald-300'
+									: 'bg-red-500/20 text-red-300'}"
+							>
+								{hasStoredDatabase ? '保存済み' : '必須'}
+							</span>
 						</div>
 						<label
 							class="relative block w-full cursor-pointer overflow-hidden rounded-2xl border-2 border-dashed transition-all duration-300
-								{dbFile
+								{hasDatabaseSource
 								? 'border-emerald-500/50 bg-emerald-500/10'
 								: 'border-white/20 bg-white/5 hover:border-emerald-400/50 hover:bg-white/10'}"
 						>
@@ -261,6 +334,19 @@
 										<div class="min-w-0 flex-1">
 											<p class="truncate font-medium text-white">{dbFile.name}</p>
 											<p class="text-sm text-white/50">{formatFileSize(dbFile.size)}</p>
+										</div>
+										<Icon icon="mdi:check-circle" class="h-6 w-6 shrink-0 text-emerald-400" />
+									</div>
+								{:else if hasStoredDatabase}
+									<div class="flex items-center gap-4">
+										<div
+											class="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-emerald-500/20"
+										>
+											<Icon icon="mdi:database-check" class="h-7 w-7 text-emerald-400" />
+										</div>
+										<div class="min-w-0 flex-1">
+											<p class="font-medium text-white">保存済みのデータベースを使用</p>
+											<p class="text-sm text-white/50">必要なら新しい `.db` を選択して置き換え</p>
 										</div>
 										<Icon icon="mdi:check-circle" class="h-6 w-6 shrink-0 text-emerald-400" />
 									</div>
@@ -456,6 +542,105 @@
 						{/if}
 					</div>
 
+					<!-- Bubble assets -->
+					<div class="group">
+						<div class="mb-2 flex items-center gap-2">
+							<Icon icon="mdi:message-image-outline" class="h-5 w-5 text-amber-400" />
+							<span class="text-sm font-medium text-white/80">チャットバブル画像</span>
+							<span class="rounded bg-red-500/20 px-1.5 py-0.5 text-xs text-red-300">必須</span>
+						</div>
+						<p class="mb-3 text-xs text-white/35">
+							`chatroom_bubble_green_normal.png` と `chatroom_bubble_white_normal.png`
+							をファイルから選択してください
+						</p>
+
+						<div class="grid gap-3 sm:grid-cols-2">
+							<label
+								class="relative block w-full cursor-pointer overflow-hidden rounded-2xl border-2 border-dashed transition-all duration-300
+									{bubbleSendFile
+									? 'border-amber-500/50 bg-amber-500/10'
+									: 'border-white/20 bg-white/5 hover:border-amber-400/50 hover:bg-white/10'}"
+							>
+								<input
+									type="file"
+									class="absolute inset-0 cursor-pointer opacity-0"
+									onchange={handleBubbleSendChange}
+								/>
+								<div class="p-4">
+									{#if bubbleSendFile}
+										<div class="flex items-center gap-4">
+											<div
+												class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-amber-500/20"
+											>
+												<Icon icon="mdi:file-check" class="h-6 w-6 text-amber-300" />
+											</div>
+											<div class="min-w-0 flex-1">
+												<p class="truncate font-medium text-white">{bubbleSendFile.name}</p>
+												<p class="text-sm text-white/50">{formatFileSize(bubbleSendFile.size)}</p>
+											</div>
+											<Icon icon="mdi:check-circle" class="h-6 w-6 shrink-0 text-amber-300" />
+										</div>
+									{:else}
+										<div class="flex items-center gap-4">
+											<div
+												class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-white/5"
+											>
+												<Icon icon="mdi:message-text-fast-outline" class="h-6 w-6 text-white/30" />
+											</div>
+											<div>
+												<p class="text-sm text-white/60">送信側バブル画像</p>
+												<p class="text-xs text-white/30">chatroom_bubble_green_normal.png</p>
+											</div>
+										</div>
+									{/if}
+								</div>
+							</label>
+
+							<label
+								class="relative block w-full cursor-pointer overflow-hidden rounded-2xl border-2 border-dashed transition-all duration-300
+									{bubbleReceiveFile
+									? 'border-amber-500/50 bg-amber-500/10'
+									: 'border-white/20 bg-white/5 hover:border-amber-400/50 hover:bg-white/10'}"
+							>
+								<input
+									type="file"
+									class="absolute inset-0 cursor-pointer opacity-0"
+									onchange={handleBubbleReceiveChange}
+								/>
+								<div class="p-4">
+									{#if bubbleReceiveFile}
+										<div class="flex items-center gap-4">
+											<div
+												class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-amber-500/20"
+											>
+												<Icon icon="mdi:file-check" class="h-6 w-6 text-amber-300" />
+											</div>
+											<div class="min-w-0 flex-1">
+												<p class="truncate font-medium text-white">{bubbleReceiveFile.name}</p>
+												<p class="text-sm text-white/50">
+													{formatFileSize(bubbleReceiveFile.size)}
+												</p>
+											</div>
+											<Icon icon="mdi:check-circle" class="h-6 w-6 shrink-0 text-amber-300" />
+										</div>
+									{:else}
+										<div class="flex items-center gap-4">
+											<div
+												class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-white/5"
+											>
+												<Icon icon="mdi:message-text-outline" class="h-6 w-6 text-white/30" />
+											</div>
+											<div>
+												<p class="text-sm text-white/60">受信側バブル画像</p>
+												<p class="text-xs text-white/30">chatroom_bubble_white_normal.png</p>
+											</div>
+										</div>
+									{/if}
+								</div>
+							</label>
+						</div>
+					</div>
+
 					<!-- Error message -->
 					{#if error}
 						<div
@@ -469,9 +654,9 @@
 					<!-- Submit button -->
 					<button
 						onclick={handleSubmit}
-						disabled={loading || !dbFile}
+						disabled={loading || !hasDatabaseSource || !hasBubbleAssets}
 						class="group relative mt-6 w-full overflow-hidden rounded-2xl px-6 py-4 font-semibold transition-all duration-300
-							{dbFile && !loading
+							{hasDatabaseSource && hasBubbleAssets && !loading
 							? 'bg-linear-to-r from-emerald-500 to-green-600 text-white shadow-lg shadow-emerald-500/30 hover:shadow-xl hover:shadow-emerald-500/40'
 							: 'cursor-not-allowed bg-white/10 text-white/30'}"
 					>

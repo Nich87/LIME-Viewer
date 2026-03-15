@@ -15,7 +15,6 @@
 
 	let { chats = [], selectedChatId = null, onselect, onReset, fullWidth = false }: Props = $props();
 
-	// Export modal state
 	let showExportModal = $state(false);
 	let showGlobalSearch = $state(false);
 
@@ -31,42 +30,12 @@
 
 	let activeTab: 'all' | 'friends' | 'groups' | 'official' = $state(getInitialTab());
 
-	const tabs = ['all', 'friends', 'groups', 'official'] as const;
-	const THEME_STORAGE_KEY = 'lime-viewer-theme';
-
-	function getInitialThemeMode(): boolean {
-		if (!browser) return false;
-		let savedTheme: string | null;
-		try {
-			savedTheme = localStorage.getItem(THEME_STORAGE_KEY);
-		} catch {
-			savedTheme = null;
-		}
-		if (savedTheme === 'dark') return true;
-		if (savedTheme === 'light') return false;
-		return window.matchMedia('(prefers-color-scheme: dark)').matches;
-	}
-
-	let isDarkTheme = $state(getInitialThemeMode());
-
-	function applyTheme(isDark: boolean) {
-		if (!browser) return;
-		document.documentElement.classList.toggle('dark', isDark);
-		document.documentElement.style.colorScheme = isDark ? 'dark' : 'light';
-		try {
-			localStorage.setItem(THEME_STORAGE_KEY, isDark ? 'dark' : 'light');
-		} catch {
-			// Ignore storage failures in restricted browsing contexts.
-		}
-		const themeColorMeta = document.querySelector('meta[name="theme-color"]');
-		if (themeColorMeta) {
-			themeColorMeta.setAttribute('content', isDark ? '#0f172a' : '#06c755');
-		}
-	}
-
-	function toggleTheme() {
-		isDarkTheme = !isDarkTheme;
-	}
+	const tabs = [
+		{ id: 'all', label: 'すべて' },
+		{ id: 'friends', label: '友だち' },
+		{ id: 'groups', label: 'グループ' },
+		{ id: 'official', label: '公式' }
+	] as const;
 
 	$effect(() => {
 		if (browser) {
@@ -74,21 +43,15 @@
 		}
 	});
 
-	$effect(() => {
-		if (browser) {
-			applyTheme(isDarkTheme);
-		}
-	});
-
 	function handleTabScroll(event: WheelEvent) {
 		event.preventDefault();
-		const currentIndex = tabs.indexOf(activeTab);
+		const currentIndex = tabs.findIndex((tab) => tab.id === activeTab);
 		if (event.deltaY > 0 || event.deltaX > 0) {
 			const nextIndex = Math.min(currentIndex + 1, tabs.length - 1);
-			activeTab = tabs[nextIndex];
+			activeTab = tabs[nextIndex].id;
 		} else if (event.deltaY < 0 || event.deltaX < 0) {
 			const prevIndex = Math.max(currentIndex - 1, 0);
-			activeTab = tabs[prevIndex];
+			activeTab = tabs[prevIndex].id;
 		}
 	}
 
@@ -110,13 +73,13 @@
 		const deltaY = touchEndY - touchStartY;
 
 		if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > SWIPE_THRESHOLD) {
-			const currentIndex = tabs.indexOf(activeTab);
+			const currentIndex = tabs.findIndex((tab) => tab.id === activeTab);
 			if (deltaX < 0) {
 				const nextIndex = Math.min(currentIndex + 1, tabs.length - 1);
-				activeTab = tabs[nextIndex];
+				activeTab = tabs[nextIndex].id;
 			} else {
 				const prevIndex = Math.max(currentIndex - 1, 0);
-				activeTab = tabs[prevIndex];
+				activeTab = tabs[prevIndex].id;
 			}
 		}
 	}
@@ -129,21 +92,12 @@
 		selectChat(chatId, { messageId });
 	}
 
-	function openGlobalSearch() {
-		showGlobalSearch = true;
-	}
-
-	function closeGlobalSearch() {
-		showGlobalSearch = false;
-	}
-
 	function formatTime(timestamp: number): string {
 		if (!timestamp) return '';
 		const date = new Date(timestamp);
 		const nowMs = Date.now();
 		const today = new Date(nowMs);
 		const isToday = date.toDateString() === today.toDateString();
-
 		const yesterday = new Date(nowMs - 86400000);
 		const isYesterday = date.toDateString() === yesterday.toDateString();
 
@@ -163,141 +117,143 @@
 </script>
 
 <div
-	class="relative flex h-full flex-col border-r border-gray-200 bg-[#E8F4F8] dark:border-slate-700 dark:bg-slate-900"
-	class:w-80={!fullWidth}
+	class="relative isolate flex h-full flex-col border-[--line-border] bg-[--line-surface]"
+	class:border-r={!fullWidth}
+	class:w-[22rem]={!fullWidth}
 	class:w-full={fullWidth}
 	ontouchstart={handleTouchStart}
 	ontouchend={handleTouchEnd}
 	role="region"
 	aria-label="トーク一覧"
 >
-	<!-- Fixed Header -->
-	<div class="shrink-0">
-		<!-- Header / Search -->
-		<div class="bg-[#7CC5E6] p-4 text-white dark:bg-slate-800">
-			<div class="mb-3 flex items-center justify-between">
-				<h1 class="text-xl font-bold">トーク</h1>
-				<div class="flex items-center gap-2">
-					<button
-						onclick={toggleTheme}
-						class="flex items-center gap-1 rounded-lg bg-white/20 px-2 py-1 text-sm transition-colors hover:bg-white/30"
-						title={isDarkTheme ? 'ライトモードに切り替え' : 'ダークモードに切り替え'}
-						aria-label={isDarkTheme ? 'ライトモードに切り替え' : 'ダークモードに切り替え'}
-					>
-						<Icon
-							icon={isDarkTheme ? 'mdi:white-balance-sunny' : 'mdi:moon-waning-crescent'}
-							class="h-4 w-4"
-						/>
-					</button>
-					<button
-						onclick={() => (showExportModal = true)}
-						class="flex items-center gap-1 rounded-lg bg-white/20 px-2 py-1 text-sm transition-colors hover:bg-white/30"
-						title="全トーク履歴をエクスポート"
-					>
-						<Icon icon="mdi:download" class="h-4 w-4" />
-						<span class="hidden sm:inline">エクスポート</span>
-					</button>
-					{#if onReset}
-						<button
-							onclick={onReset}
-							class="flex items-center gap-1 rounded-lg bg-white/20 px-2 py-1 text-sm transition-colors hover:bg-white/30"
-							title="データをリセット"
-						>
-							<Icon icon="mdi:delete-outline" class="h-4 w-4" />
-							<span class="hidden sm:inline">リセット</span>
-						</button>
-					{/if}
-				</div>
+	<div class="shrink-0 bg-[--line-surface]">
+		<div class="flex items-start justify-between px-4 pt-4 pb-2">
+			<div class="min-w-0">
+				<p class="text-[11px] font-semibold tracking-[0.18em] text-[--line-brand] uppercase">
+					LIME Viewer
+				</p>
+				<h1 class="mt-1 text-[1.65rem] leading-none font-bold tracking-tight text-[--line-text]">
+					トーク
+				</h1>
 			</div>
 
+			<div class="ml-3 flex items-center gap-1">
+				<button
+					type="button"
+					class="line-icon-button flex h-9 w-9 items-center justify-center"
+					onclick={() => (showExportModal = true)}
+					title="全トーク履歴をエクスポート"
+					aria-label="全トーク履歴をエクスポート"
+				>
+					<Icon icon="mdi:download-outline" class="h-5 w-5" />
+				</button>
+				{#if onReset}
+					<button
+						type="button"
+						class="line-icon-button flex h-9 w-9 items-center justify-center"
+						onclick={onReset}
+						title="データをリセット"
+						aria-label="データをリセット"
+					>
+						<Icon icon="mdi:restart" class="h-5 w-5" />
+					</button>
+				{/if}
+			</div>
+		</div>
+
+		<div class="px-4 pb-3">
 			<button
 				type="button"
-				onclick={openGlobalSearch}
-				class="flex w-full items-center gap-2 rounded-full bg-white/25 px-3 py-2 text-sm text-white/95 transition-colors hover:bg-white/30"
+				onclick={() => (showGlobalSearch = true)}
+				class="line-search-pill flex h-9.5 w-full items-center gap-2 px-3 text-left text-sm"
 				aria-label="トーク全体検索を開く"
 			>
-				<Icon icon="mdi:magnify" class="h-5 w-5 shrink-0 text-white/90" />
-				<span>検索</span>
+				<Icon icon="mdi:magnify" class="h-4.5 w-4.5 shrink-0 text-[--line-search-icon]" />
+				<span class="truncate">検索</span>
 			</button>
 		</div>
 
-		<!-- Tabs -->
-		<div
-			class="flex border-b border-gray-300 bg-white dark:border-slate-700 dark:bg-slate-800"
-			onwheel={handleTabScroll}
-		>
-			{#each tabs as tab (tab)}
-				<button
-					class="flex-1 py-3 text-sm font-medium transition-colors {activeTab === tab
-						? 'border-b-2 border-blue-500 text-blue-500 dark:border-cyan-400 dark:text-cyan-300'
-						: 'text-gray-500 hover:text-gray-700 dark:text-slate-400 dark:hover:text-slate-200'}"
-					onclick={() => (activeTab = tab)}
+		<div class="px-2" onwheel={handleTabScroll}>
+			<div class="flex min-w-full items-center">
+				{#each tabs as tab (tab.id)}
+					<button
+						type="button"
+						class="flex-1 border-b-2 px-2 pt-2 pb-3 text-sm font-semibold transition-colors {activeTab ===
+						tab.id
+							? 'border-[--line-text] text-[--line-text]'
+							: 'border-transparent text-[--line-text-soft] hover:text-[--line-text]'}"
+						onclick={() => (activeTab = tab.id)}
+					>
+						{tab.label}
+					</button>
+				{/each}
+			</div>
+		</div>
+	</div>
+
+	<div class="min-h-0 flex-1 overflow-y-auto bg-[--line-surface] px-2 pb-3">
+		{#if filteredChats.length === 0}
+			<div class="flex h-full flex-col items-center justify-center px-6 text-center">
+				<div
+					class="mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-[--line-surface-alt] text-[--line-text-faint]"
 				>
-					{tab === 'all'
-						? 'すべて'
-						: tab === 'friends'
-							? '友だち'
-							: tab === 'groups'
-								? 'グループ'
-								: '公式'}
+					<Icon icon="mdi:chat-outline" class="h-7 w-7" />
+				</div>
+				<p class="text-sm font-medium text-[--line-text-subtle]">表示できるトークがありません</p>
+			</div>
+		{:else}
+			{#each filteredChats as chat (chat.id)}
+				<button
+					type="button"
+					class="line-list-row {selectedChatId === chat.id
+						? 'is-active'
+						: ''} flex w-full items-center gap-3 rounded-[20px] px-3 py-3 text-left"
+					onclick={() => selectChat(chat.id)}
+				>
+					<div
+						class="flex h-13 w-13 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[#d9dde4] text-sm font-semibold text-[--line-text-subtle]"
+					>
+						{#if chat.avatarUrl}
+							<img src={chat.avatarUrl} alt={chat.name} class="h-full w-full object-cover" />
+						{:else}
+							{chat.name.slice(0, 1)}
+						{/if}
+					</div>
+
+					<div class="min-w-0 flex-1">
+						<div class="flex items-start justify-between gap-3">
+							<h3 class="truncate text-[15px] leading-5 font-semibold text-[--line-text]">
+								{chat.name}
+								{#if (chat.memberCount ?? 0) > 0}
+									<span class="ml-1 text-[12px] font-medium text-[--line-text-soft]">
+										({chat.memberCount})
+									</span>
+								{/if}
+							</h3>
+							<span class="shrink-0 pt-0.5 text-[11px] text-[--line-text-faint]">
+								{formatTime(chat.lastMessageTime)}
+							</span>
+						</div>
+
+						<p class="mt-1 truncate text-[13px] leading-5 text-[--line-text-subtle]">
+							{chat.lastMessage || 'メッセージはありません'}
+						</p>
+					</div>
 				</button>
 			{/each}
-		</div>
+		{/if}
 	</div>
 
-	<!-- Chat List -->
-	<div class="min-h-0 flex-1 overflow-y-auto">
-		{#each filteredChats as chat (chat.id)}
-			<button
-				class="flex w-full items-center p-3 transition-colors hover:bg-blue-50 dark:hover:bg-slate-800 {selectedChatId ===
-				chat.id
-					? 'bg-blue-100 dark:bg-slate-700'
-					: ''}"
-				onclick={() => selectChat(chat.id)}
-			>
-				<!-- Avatar Placeholder -->
-				<div
-					class="mr-3 flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-full bg-gray-300 font-bold text-gray-600 dark:bg-slate-600 dark:text-slate-100"
-				>
-					{#if chat.avatarUrl}
-						<img src={chat.avatarUrl} alt={chat.name} class="h-full w-full object-cover" />
-					{:else}
-						{chat.name.slice(0, 1)}
-					{/if}
-				</div>
-
-				<div class="min-w-0 flex-1 text-left">
-					<div class="mb-1 flex items-baseline justify-between">
-						<h3 class="truncate text-sm font-bold text-gray-800 dark:text-slate-100">
-							{chat.name}
-							{#if (chat.memberCount ?? 0) > 0}
-								<span class="text-normal text-xs text-gray-500 dark:text-slate-400"
-									>({chat.memberCount})</span
-								>
-							{/if}
-						</h3>
-						<span class="ml-1 shrink-0 text-xs text-gray-500 dark:text-slate-400"
-							>{formatTime(chat.lastMessageTime)}</span
-						>
-					</div>
-					<p class="truncate text-sm text-gray-500 dark:text-slate-400">{chat.lastMessage}</p>
-				</div>
-			</button>
-		{/each}
-	</div>
-
-	<!-- Global Search Panel -->
 	{#if showGlobalSearch}
 		<ChatGlobalSearchPanel
 			{chats}
 			onSelectChat={selectChat}
 			onSelectMessage={handleSelectMessage}
-			onClose={closeGlobalSearch}
+			onClose={() => (showGlobalSearch = false)}
 		/>
 	{/if}
 </div>
 
-<!-- Export All Modal -->
 {#if showExportModal}
 	<ExportAllModal {chats} onClose={() => (showExportModal = false)} />
 {/if}

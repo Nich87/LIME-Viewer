@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { Message } from '$lib/schema';
-	import { getBubbleStyle } from '$lib/utils';
+	import { bubbleAssetService } from '$lib/services';
 
 	interface Props {
 		message: Message;
@@ -8,12 +8,18 @@
 	}
 
 	let { message, isMe }: Props = $props();
+	const bubbleUrl = $derived(bubbleAssetService.getBubbleUrl(isMe ? 'send' : 'receive'));
 
-	const bubbleClass = $derived(`${getBubbleStyle(isMe, { withPadding: false })} px-4 py-2 text-sm`);
+	const bubbleClass = $derived(
+		`line-text-bubble ${isMe ? 'line-text-bubble--send' : 'line-text-bubble--receive'} line-text-bubble--asset`
+	);
+	const bubbleStyle = $derived(bubbleUrl ? `border-image-source: url("${bubbleUrl}")` : undefined);
 </script>
 
-<div class={bubbleClass}>
-	<p class="wrap-break-word whitespace-pre-wrap">
-		{message.content || 'Contents unsupported'}
-	</p>
+<div class={bubbleClass} style={bubbleStyle}>
+	<div class="line-text-bubble__inner text-sm leading-[1.45]">
+		<p class="wrap-break-word whitespace-pre-wrap">
+			{message.content || 'Contents unsupported'}
+		</p>
+	</div>
 </div>

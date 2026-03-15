@@ -81,8 +81,8 @@
 {#if isGroupEvent && message.attachment?.groupEvent}
 	{@const evt = message.attachment.groupEvent}
 	<div class="mb-4 flex w-full justify-center">
-		<div class="max-w-[80%] rounded-lg bg-[#2b2b2b]/80 px-4 py-2 text-center">
-			<span class="text-sm text-gray-300">
+		<div class="line-system-chip max-w-[80%] px-4 py-2 text-center shadow-sm">
+			<span class="text-sm text-white/95">
 				{getGroupEventText(evt.locKey, evt.actorName, evt.targetName)}
 			</span>
 		</div>
@@ -91,8 +91,8 @@
 	<!-- System Message (type=17) - Center aligned, hide if empty -->
 	{#if message.content}
 		<div class="mb-4 flex w-full justify-center">
-			<div class="max-w-[80%] rounded-lg bg-[#2b2b2b]/80 px-4 py-2 text-center">
-				<span class="text-sm text-gray-300">
+			<div class="line-system-chip max-w-[80%] px-4 py-2 text-center shadow-sm">
+				<span class="text-sm text-white/95">
 					{message.content}
 				</span>
 			</div>
@@ -104,13 +104,14 @@
 		{#if !message.isMe}
 			<!-- Avatar (Left) -->
 			<div
-				class="mr-2 flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-gray-300 dark:bg-slate-600"
+				class="mr-2 flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[#dde2ea]"
 			>
 				{#if message.fromId}
-					<span class="text-xs text-gray-600 dark:text-slate-100">{message.fromId.slice(0, 2)}</span
-					>
+					<span class="text-[11px] font-medium text-[--line-text-subtle]">
+						{message.fromId.slice(0, 2)}
+					</span>
 				{:else}
-					<span class="text-xs">?</span>
+					<span class="text-[11px] text-[--line-text-subtle]">?</span>
 				{/if}
 			</div>
 		{/if}
@@ -118,9 +119,9 @@
 		<div class="flex max-w-[70%] flex-col {message.isMe ? 'items-end' : 'items-start'}">
 			<!-- Sender Name (Group only, for others) -->
 			{#if isGroup && !message.isMe}
-				<span class="mb-1 ml-1 text-xs text-gray-500 dark:text-slate-400"
-					>{message.fromName || 'Unknown'}</span
-				>
+				<span class="mb-1 ml-1 text-[11px] font-medium text-[--line-text-subtle]">
+					{message.fromName || 'Unknown'}
+				</span>
 			{/if}
 
 			<div class="flex items-end {message.isMe ? 'flex-row-reverse' : 'flex-row'}">
@@ -153,14 +154,12 @@
 
 				<!-- Metadata (Time, Read status) -->
 				<div
-					class="mx-1 mb-1 flex flex-col text-[10px] text-gray-500 {message.isMe
+					class="mx-1 mb-1 flex min-w-[2.4rem] flex-col text-[10px] leading-3 text-[--line-text-soft] {message.isMe
 						? 'items-end'
-						: 'items-start'} dark:text-slate-400"
+						: 'items-start'}"
 				>
 					{#if message.isMe}
-						<span class="text-[#333] dark:text-slate-300"
-							>既読 {message.status === 'read' ? '' : ''}</span
-						>
+						<span class="font-medium text-[--line-text-subtle]">既読</span>
 					{/if}
 					<span>{formatTime(message.timestamp)}</span>
 				</div>
@@ -187,12 +186,12 @@
 
 		<!-- Modal Content -->
 		<div
-			class="relative z-10 w-full max-w-[calc(100vw-2rem)] rounded-2xl bg-white p-3 shadow-2xl sm:max-w-130 sm:p-4 dark:bg-slate-900"
+			class="relative z-10 w-full max-w-[calc(100vw-2rem)] rounded-2xl bg-white p-3 shadow-2xl sm:max-w-lg sm:p-4"
 		>
 			<!-- Close button -->
 			<button
 				type="button"
-				class="absolute -top-2 -right-2 flex h-8 w-8 cursor-pointer items-center justify-center rounded-full border-0 bg-gray-800 text-white shadow-lg transition-colors hover:bg-gray-700 sm:-top-3 sm:-right-3 dark:bg-slate-700 dark:hover:bg-slate-600"
+				class="absolute -top-2 -right-2 flex h-8 w-8 cursor-pointer items-center justify-center rounded-full border-0 bg-[--line-text] text-white shadow-lg transition-colors hover:bg-[--line-text-subtle] sm:-top-3 sm:-right-3"
 				onclick={closeMusicModal}
 				aria-label="閉じる"
 			>

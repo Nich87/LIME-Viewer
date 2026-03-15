@@ -46,8 +46,8 @@
 		<button
 			type="button"
 			class="mr-3 flex h-10 w-10 shrink-0 items-center justify-center rounded-full {isMe
-				? 'bg-green-600'
-				: 'bg-gray-200 dark:bg-slate-600'} {voiceUrl
+				? 'bg-[--line-brand]'
+				: 'bg-[--line-surface-alt]'} {voiceUrl
 				? 'cursor-pointer hover:opacity-80'
 				: 'cursor-default opacity-50'}"
 			onclick={() => voiceUrl && togglePlayback()}
@@ -56,12 +56,12 @@
 			{#if isPlaying}
 				<Icon
 					icon="heroicons:pause-solid"
-					class="h-5 w-5 {isMe ? 'text-white' : 'text-gray-600 dark:text-slate-200'}"
+					class="h-5 w-5 {isMe ? 'text-white' : 'text-[--line-text-subtle]'}"
 				/>
 			{:else}
 				<Icon
 					icon="heroicons:play-solid"
-					class="h-5 w-5 {isMe ? 'text-white' : 'text-gray-600 dark:text-slate-200'}"
+					class="h-5 w-5 {isMe ? 'text-white' : 'text-[--line-text-subtle]'}"
 				/>
 			{/if}
 		</button>
@@ -69,12 +69,12 @@
 		<div class="flex flex-1 items-center gap-0.5">
 			{#each Array.from({ length: 12 }, (_, idx) => idx) as i (i)}
 				<div
-					class="w-1 rounded-full {isMe ? 'bg-green-700' : 'bg-gray-400'}"
+					class="w-1 rounded-full {isMe ? 'bg-[#4f8f46]' : 'bg-[#bcbcbc]'}"
 					style="height: {4 + Math.sin(i * 0.8) * 8 + 4}px"
 				></div>
 			{/each}
 		</div>
 		<!-- Duration -->
-		<span class="ml-2 text-xs text-gray-600 dark:text-slate-300">{durationSec}秒</span>
+		<span class="ml-2 text-xs text-[--line-text-subtle]">{durationSec}秒</span>
 	</div>
 {/if}

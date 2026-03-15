@@ -1,4 +1,4 @@
-export const BUBBLE_BASE_STYLE = 'relative rounded-2xl shadow-sm';
+export const BUBBLE_BASE_STYLE = 'relative rounded-[17px]';
 
 /**
  * Get bubble style by sender (self/recipient)
@@ -19,14 +19,12 @@ export function getBubbleStyle(
 	const baseClasses = [BUBBLE_BASE_STYLE];
 
 	if (isMe) {
-		baseClasses.push('rounded-tr-none bg-[#B8E986] text-black');
+		baseClasses.push('bg-[var(--line-bubble-send)] text-[var(--line-text)]');
 	} else {
-		baseClasses.push(
-			'rounded-tl-none border border-gray-100 bg-white text-black dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100'
-		);
+		baseClasses.push('bg-[var(--line-bubble-receive)] text-[var(--line-text)]');
 	}
 
-	if (withPadding) baseClasses.push('px-4 py-3');
+	if (withPadding) baseClasses.push('px-3 pt-[6px] pb-[8px]');
 	if (flex) baseClasses.push('flex items-center');
 	if (minWidth) baseClasses.push(minWidth);
 
@@ -37,10 +35,8 @@ export function getBubbleStyle(
  * Get styles for media bubbles (images/videos)
  */
 export function getMediaBubbleStyle(isMe: boolean): string {
-	const base = 'relative overflow-hidden rounded-2xl shadow-sm';
-	return isMe
-		? `${base} rounded-tr-none`
-		: `${base} rounded-tl-none border border-gray-100 dark:border-slate-600`;
+	const base = 'relative overflow-hidden rounded-[17px]';
+	return isMe ? `${base} bg-[var(--line-bubble-send)]` : `${base} bg-[var(--line-bubble-receive)]`;
 }
 
 /**

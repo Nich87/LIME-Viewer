@@ -47,3 +47,6 @@ yarn-error.log*
 # Testing
 coverage/
 .nyc_output/
+
+*base_src/
+themefile*

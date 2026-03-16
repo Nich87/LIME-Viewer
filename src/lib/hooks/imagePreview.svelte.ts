@@ -1,7 +1,7 @@
 import { pushState } from '$app/navigation';
 import type { Message } from '$lib/schema';
 
-export interface ImageInfo {
+export interface PreviewImageInfo {
 	url: string;
 	senderName: string;
 	timestamp?: number;
@@ -84,7 +84,7 @@ export function createImagePreviewManager(getImageMessages: () => Message[]) {
 		return getImageMessages().length;
 	}
 
-	function getAllImageInfos(): ImageInfo[] {
+	function getAllImageInfos(): PreviewImageInfo[] {
 		return getImageMessages().map((m) => ({
 			url: m.attachment?.url || '',
 			senderName: m.fromName || '',

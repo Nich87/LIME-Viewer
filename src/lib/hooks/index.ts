@@ -1,5 +1,5 @@
 export {
 	createImagePreviewManager,
-	type ImageInfo,
+	type PreviewImageInfo,
 	type ImagePreviewState
 } from './imagePreview.svelte';

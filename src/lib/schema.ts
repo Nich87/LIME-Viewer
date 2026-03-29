@@ -39,6 +39,7 @@ export interface ChatRoom {
 	unreadCount: number;
 	isGroup: boolean;
 	avatarUrl?: string; // Group avatar or 1:1 friend's avatar
+	notificationDisabled?: boolean;
 }
 
 // Raw database row definitions for tables in LINE backup databases.

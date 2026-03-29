@@ -157,7 +157,7 @@ class DatabaseService {
 		// NOTE: sql.js 1.14 browser build can return undefined `columns` from `exec()`.
 		// Use `prepare()+getAsObject()` for stable row shape across versions.
 		const rows = this.queryRows(`
-			SELECT chat_id, chat_name, mid_p, input_text, last_message, last_created_time
+			SELECT *
 			FROM chat
 			ORDER BY last_created_time DESC
 		`);
@@ -197,6 +197,9 @@ class DatabaseService {
 			const isGroup = groupsMap.has(chatId);
 			const isKeepMemo = keepMemoChatIds.has(chatId);
 			const partnerMid = this.toString(rowObj.mid_p);
+			const messageCount = this.toNumber(rowObj.message_count);
+			const readMessageCount = this.toNumber(rowObj.read_message_count);
+			const unreadCount = Math.max(0, messageCount - readMessageCount);
 			let name = this.toString(rowObj.chat_name);
 
 			if (isKeepMemo) {
@@ -219,11 +222,12 @@ class DatabaseService {
 				lastMessage:
 					this.toString(rowObj.input_text) || this.toString(rowObj.last_message) || 'No message',
 				lastMessageTime: this.toNumber(rowObj.last_created_time),
-				unreadCount: 0,
+				unreadCount,
 				isGroup: isGroup,
 				avatarUrl: isGroup
 					? getLineGroupImageUrl(chatId)
-					: getLineProfileImageUrl(partnerMid || chatId)
+					: getLineProfileImageUrl(partnerMid || chatId),
+				notificationDisabled: this.toNumber(rowObj.is_notification, 1) === 0
 			});
 		}
 

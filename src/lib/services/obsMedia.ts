@@ -112,6 +112,22 @@ function buildTalkMeta(messageId: string): string {
 	);
 }
 
+function normalizeObsAccessToken(rawValue?: string | null): string | undefined {
+	if (!rawValue) return undefined;
+
+	// LINE backups may append metadata after the token using either "^^" or ASCII RS (0x1E).
+	const textSeparatorIndex = rawValue.indexOf('^^');
+	const recordSeparatorIndex = rawValue.indexOf(String.fromCharCode(0x1e));
+	const separatorIndex = [textSeparatorIndex, recordSeparatorIndex]
+		.filter((index) => index >= 0)
+		.reduce((smallest, index) => Math.min(smallest, index), Number.POSITIVE_INFINITY);
+	const token = (
+		separatorIndex === Number.POSITIVE_INFINITY ? rawValue : rawValue.slice(0, separatorIndex)
+	).trim();
+
+	return token || undefined;
+}
+
 async function deriveMediaKeys(keyMaterial: Uint8Array): Promise<{
 	encKey: Uint8Array;
 	macKey: Uint8Array;
@@ -322,7 +338,7 @@ class ObsMediaService {
 	}
 
 	setEncryptedAccessToken(rawValue?: string | null): void {
-		const token = rawValue?.split('^^')[0]?.trim();
+		const token = normalizeObsAccessToken(rawValue);
 		if (this.obsToken !== token) this.reset();
 		this.obsToken = token || undefined;
 	}

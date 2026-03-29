@@ -82,14 +82,30 @@ export function formatCallDuration(durationMs: number): string {
 	return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
 }
 
+function normalizeLineAvatarId(value?: string | null): string | undefined {
+	const normalized = value?.trim();
+	if (!normalized) return undefined;
+	return normalized;
+}
+
 /**
- * Build LINE profile image URL from MID/chat ID.
+ * Build LINE profile image URL from MID.
  * Returns undefined when the source value is empty.
  */
 export function getLineProfileImageUrl(mid?: string | null): string | undefined {
-	const normalized = mid?.trim();
+	const normalized = normalizeLineAvatarId(mid);
 	if (!normalized) return undefined;
 	return `https://obs.line-apps.com/r/talk/p/${encodeURIComponent(normalized)}`;
+}
+
+/**
+ * Build LINE group image URL from group ID.
+ * Returns undefined when the source value is empty.
+ */
+export function getLineGroupImageUrl(groupId?: string | null): string | undefined {
+	const normalized = normalizeLineAvatarId(groupId);
+	if (!normalized) return undefined;
+	return `https://obs.line-apps.com/os/g/${encodeURIComponent(normalized)}`;
 }
 
 /**

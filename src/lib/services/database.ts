@@ -11,7 +11,7 @@ import { mediaService } from './media';
 import { bubbleAssetService } from './bubbleAssets';
 import { storageService } from './storage';
 import { determineAttachment, extractMessageRelation } from './messageParser';
-import { getLineProfileImageUrl } from '$lib/utils';
+import { getLineGroupImageUrl, getLineProfileImageUrl } from '$lib/utils';
 
 export class DatabaseError extends Error {
 	constructor(
@@ -221,7 +221,9 @@ class DatabaseService {
 				lastMessageTime: this.toNumber(rowObj.last_created_time),
 				unreadCount: 0,
 				isGroup: isGroup,
-				avatarUrl: getLineProfileImageUrl(isGroup ? chatId : partnerMid || chatId)
+				avatarUrl: isGroup
+					? getLineGroupImageUrl(chatId)
+					: getLineProfileImageUrl(partnerMid || chatId)
 			});
 		}
 

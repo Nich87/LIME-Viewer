@@ -19,7 +19,7 @@ export default defineConfig({
 				navigateFallbackDenylist: [/^\/api/],
 				runtimeCaching: [
 					{
-						urlPattern: /^https:\/\/obs\.line-apps\.com\/r\/talk\/p\/.+$/i,
+						urlPattern: /^https:\/\/obs\.line-apps\.com\/(?:r\/talk\/p|os\/g)\/.+$/i,
 						handler: 'StaleWhileRevalidate',
 						options: {
 							cacheName: 'line-profile-images',

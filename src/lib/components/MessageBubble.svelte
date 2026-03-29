@@ -4,6 +4,7 @@
 	import { MessageType } from '$lib/schema';
 	import { formatTime, getGroupEventText } from '$lib/utils';
 	import { LINE_MUSIC_EMBED_URL } from '$lib/constants';
+	import Avatar from './Avatar.svelte';
 
 	// Bubble sub-components
 	import {
@@ -120,17 +121,11 @@
 	<div class="mb-4 flex w-full {message.isMe ? 'justify-end' : 'justify-start'}">
 		{#if !message.isMe}
 			<!-- Avatar (Left) -->
-			<div
-				class="mr-2 flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[#dde2ea]"
-			>
-				{#if message.fromId}
-					<span class="text-[11px] font-medium text-[--line-text-subtle]">
-						{message.fromId.slice(0, 2)}
-					</span>
-				{:else}
-					<span class="text-[11px] text-[--line-text-subtle]">?</span>
-				{/if}
-			</div>
+			<Avatar
+				name={message.fromName || message.fromId || 'Unknown'}
+				src={message.avatarUrl}
+				class="mr-2 h-9 w-9 shrink-0"
+			/>
 		{/if}
 
 		<div class="flex max-w-[70%] flex-col {message.isMe ? 'items-end' : 'items-start'}">

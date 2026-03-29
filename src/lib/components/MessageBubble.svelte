@@ -128,7 +128,7 @@
 			/>
 		{/if}
 
-		<div class="flex max-w-[70%] flex-col {message.isMe ? 'items-end' : 'items-start'}">
+		<div class="flex max-w-[70%] min-w-0 flex-col {message.isMe ? 'items-end' : 'items-start'}">
 			<!-- Sender Name (Group only, for others) -->
 			{#if isGroup && !message.isMe}
 				<span class="mb-1 ml-1 text-[11px] font-medium text-[--line-text-subtle]">
@@ -136,7 +136,9 @@
 				</span>
 			{/if}
 
-			<div class="flex items-end {message.isMe ? 'flex-row-reverse' : 'flex-row'}">
+			<div
+				class="flex max-w-full min-w-0 items-end {message.isMe ? 'flex-row-reverse' : 'flex-row'}"
+			>
 				<!-- Bubble / Content -->
 				{#if bubbleType === 'sticker'}
 					<StickerBubble {message} />

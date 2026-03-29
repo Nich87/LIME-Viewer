@@ -68,6 +68,8 @@
 
 	// Export modal state
 	let showExportModal = $state(false);
+	let showHeaderMenu = $state(false);
+	const isMobileChatView = $derived(Boolean(onBack));
 
 	// Helper for date separators
 	function getDateString(timestamp: number): string {
@@ -220,6 +222,7 @@
 	}
 
 	function openSearch() {
+		showHeaderMenu = false;
 		showSearch = true;
 	}
 
@@ -583,6 +586,7 @@
 
 	// Export functions
 	function openExportModal() {
+		showHeaderMenu = false;
 		showExportModal = true;
 	}
 
@@ -601,57 +605,123 @@
 	}
 </script>
 
-<div class="relative isolate flex h-full flex-col bg-[--line-surface]">
+<div
+	class="relative isolate flex h-full flex-col {isMobileChatView
+		? 'bg-[--line-chat-bg]'
+		: 'bg-[--line-surface]'}"
+>
 	<!-- Header (always shown, search panel is an overlay) -->
-	<div
-		class="sticky top-0 z-10 flex h-15 shrink-0 items-center justify-between border-b border-[--line-border] bg-[--line-surface] px-3 sm:px-4"
-	>
-		<div class="flex min-w-0 items-center">
-			{#if onBack}
-				<button
-					type="button"
-					class="line-icon-button mr-2 flex h-9 w-9 items-center justify-center"
-					onclick={onBack}
-					aria-label="戻る"
-				>
-					<Icon icon="mdi:chevron-left" class="h-6 w-6" />
-				</button>
-			{/if}
-			<Avatar name={chat.name} src={chat.avatarUrl} class="mr-3 h-10 w-10 shrink-0" />
-			<div class="min-w-0">
-				<h2 class="truncate text-[16px] font-semibold text-[--line-text]">{chat.name}</h2>
-				{#if chat.memberCount}
-					<span class="mt-0.5 block text-[12px] text-[--line-text-soft]">
-						メンバー {chat.memberCount}
+	<div class="sticky top-0 z-10 shrink-0">
+		{#if isMobileChatView}
+			<div
+				class="line-chat-mobile-header flex h-14 items-center justify-between px-2.5 pt-[max(0px,env(safe-area-inset-top))]"
+			>
+				<div class="flex min-w-0 flex-1 items-center">
+					<button
+						type="button"
+						class="line-chat-header-button mr-1 flex h-9 w-9 items-center justify-center"
+						onclick={() => {
+							showHeaderMenu = false;
+							onBack?.();
+						}}
+						aria-label="戻る"
+					>
+						<Icon icon="mdi:chevron-left" class="h-6 w-6" />
+					</button>
+					<h2 class="truncate pr-3 text-[16px] font-semibold text-[--line-text]">{chat.name}</h2>
+				</div>
+
+				<div class="ml-2 flex items-center gap-0.5 text-[--line-text]">
+					<button
+						type="button"
+						class="line-chat-header-button flex h-9 w-9 items-center justify-center"
+						aria-label="検索"
+						onclick={openSearch}
+					>
+						<Icon icon="mdi:magnify" class="h-5 w-5" />
+					</button>
+					<span
+						class="line-chat-header-button flex h-9 w-9 items-center justify-center opacity-90"
+						aria-hidden="true"
+					>
+						<Icon icon="mdi:phone-outline" class="h-5 w-5" />
 					</span>
-				{/if}
+					<button
+						type="button"
+						class="line-chat-header-button flex h-9 w-9 items-center justify-center"
+						onclick={() => (showHeaderMenu = !showHeaderMenu)}
+						aria-label="その他の操作"
+						aria-expanded={showHeaderMenu}
+					>
+						<Icon icon="mdi:menu" class="h-5 w-5" />
+					</button>
+				</div>
 			</div>
-		</div>
-		<div class="ml-4 flex items-center gap-1">
-			<button
-				type="button"
-				class="line-icon-button flex h-9 w-9 items-center justify-center"
-				aria-label="検索"
-				onclick={openSearch}
+		{:else}
+			<div
+				class="flex h-15 items-center justify-between border-b border-[--line-border] bg-[--line-surface] px-3 sm:px-4"
 			>
-				<Icon icon="mdi:magnify" class="h-5 w-5" />
-			</button>
-			<button
-				type="button"
-				class="line-icon-button flex h-9 w-9 items-center justify-center"
-				aria-label="エクスポート"
-				onclick={openExportModal}
-				title="トーク履歴をエクスポート"
-			>
-				<Icon icon="mdi:download-outline" class="h-5 w-5" />
-			</button>
-		</div>
+				<div class="flex min-w-0 items-center">
+					<Avatar name={chat.name} src={chat.avatarUrl} class="mr-3 h-10 w-10 shrink-0" />
+					<div class="min-w-0">
+						<h2 class="truncate text-[16px] font-semibold text-[--line-text]">{chat.name}</h2>
+						{#if chat.memberCount}
+							<span class="mt-0.5 block text-[12px] text-[--line-text-soft]">
+								メンバー {chat.memberCount}
+							</span>
+						{/if}
+					</div>
+				</div>
+				<div class="ml-4 flex items-center gap-1">
+					<button
+						type="button"
+						class="line-icon-button flex h-9 w-9 items-center justify-center"
+						aria-label="検索"
+						onclick={openSearch}
+					>
+						<Icon icon="mdi:magnify" class="h-5 w-5" />
+					</button>
+					<button
+						type="button"
+						class="line-icon-button flex h-9 w-9 items-center justify-center"
+						aria-label="エクスポート"
+						onclick={openExportModal}
+						title="トーク履歴をエクスポート"
+					>
+						<Icon icon="mdi:download-outline" class="h-5 w-5" />
+					</button>
+				</div>
+			</div>
+		{/if}
 	</div>
+
+	{#if showHeaderMenu}
+		<button
+			type="button"
+			class="absolute inset-0 z-20 bg-transparent"
+			onclick={() => (showHeaderMenu = false)}
+			aria-label="メニューを閉じる"
+		></button>
+		<div
+			class="absolute top-[calc(env(safe-area-inset-top)+3.15rem)] right-3 z-30 min-w-[11.5rem] overflow-hidden rounded-2xl border border-[rgba(17,17,17,0.08)] bg-white py-1 shadow-[0_18px_36px_rgba(0,0,0,0.18)]"
+			style="background-color: #ffffff;"
+		>
+			<button
+				type="button"
+				class="flex w-full items-center gap-2.5 bg-white px-4 py-3 text-left text-[13px] text-[--line-text] hover:bg-[--line-surface-press]"
+				style="background-color: #ffffff;"
+				onclick={openExportModal}
+			>
+				<Icon icon="mdi:download-outline" class="h-4.5 w-4.5 text-[--line-text-soft]" />
+				<span>トーク履歴をエクスポート</span>
+			</button>
+		</div>
+	{/if}
 
 	<!-- Message Area -->
 	<div
 		bind:this={viewport}
-		class="line-chat-wallpaper relative flex-1 overflow-y-auto px-3 py-4 sm:px-4"
+		class="line-chat-wallpaper relative flex-1 overflow-y-auto px-3 py-3 sm:px-4 sm:py-4"
 		class:pb-28={selectionMode}
 	>
 		{#if loading}
@@ -664,7 +734,7 @@
 			<!-- Date Separator -->
 			{#if i === 0 || getDateString(messages[i].timestamp) !== getDateString(messages[i - 1].timestamp)}
 				<div class="my-4 flex justify-center" use:registerDateSeparatorRef={i}>
-					<span class="line-system-chip px-3 py-1 text-[11px] font-medium shadow-sm">
+					<span class="line-chat-date-pill px-3 py-1 text-[10px] font-medium">
 						{getDateString(msg.timestamp)}
 					</span>
 				</div>
@@ -736,6 +806,35 @@
 					<Icon icon="mdi:calendar-month-outline" class="h-4 w-4" />
 					日付
 				</button>
+			</div>
+		</div>
+	{:else if isMobileChatView}
+		<div
+			class="border-t border-[rgba(17,17,17,0.08)] bg-white px-2.5 pt-2 pb-[calc(8px+env(safe-area-inset-bottom))]"
+		>
+			<div class="flex items-center gap-1.5">
+				<span class="line-chat-composer-side" aria-hidden="true">
+					<Icon icon="mdi:plus" class="h-6 w-6" />
+				</span>
+				<span class="line-chat-composer-side" aria-hidden="true">
+					<Icon icon="mdi:camera-outline" class="h-5.5 w-5.5" />
+				</span>
+				<span class="line-chat-composer-side" aria-hidden="true">
+					<Icon icon="mdi:image-outline" class="h-5.5 w-5.5" />
+				</span>
+
+				<div class="line-chat-composer flex min-w-0 flex-1 items-center gap-2 px-3.5">
+					<span class="flex-1 text-[13px] text-[#c1c7d0]">読み取り専用</span>
+					<Icon
+						icon="mdi:emoticon-happy-outline"
+						class="h-5 w-5 shrink-0 text-[#a3aab6]"
+						aria-hidden="true"
+					/>
+				</div>
+
+				<span class="line-chat-composer-side" aria-hidden="true">
+					<Icon icon="mdi:microphone-outline" class="h-5.5 w-5.5" />
+				</span>
 			</div>
 		</div>
 	{:else}

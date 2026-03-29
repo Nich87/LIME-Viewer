@@ -16,7 +16,24 @@ export default defineConfig({
 				globPatterns: ['**/*.{js,css,html,ico,png,svg,woff,woff2,wasm}'],
 				maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
 				navigateFallback: '/',
-				navigateFallbackDenylist: [/^\/api/]
+				navigateFallbackDenylist: [/^\/api/],
+				runtimeCaching: [
+					{
+						urlPattern: /^https:\/\/obs\.line-apps\.com\/r\/talk\/p\/.+$/i,
+						handler: 'StaleWhileRevalidate',
+						options: {
+							cacheName: 'line-profile-images',
+							cacheableResponse: {
+								statuses: [0, 200]
+							},
+							expiration: {
+								maxEntries: 512,
+								maxAgeSeconds: 60 * 60 * 24 * 30,
+								purgeOnQuotaError: true
+							}
+						}
+					}
+				]
 			},
 			devOptions: {
 				enabled: false

@@ -1,11 +1,10 @@
 import type { Message } from '$lib/schema';
 
-const OBS_REMOTE_BASE_URL = 'https://obs.line-apps.com/r/talk/emi/';
+const OBS_PROXY_BASE_URL = '/api/obs/';
 const HKDF_INFO = new TextEncoder().encode('FileEncryption');
-const OBS_DISABLE_STATUSES = new Set([400, 401, 403]);
+const OBS_SESSION_DISABLE_STATUSES = new Set([401]);
 const MAX_CONCURRENT_OBS_LOADS = 3;
 const MAX_QUEUE_SIZE = 10;
-const MAX_CONSECUTIVE_FAILURES = 5;
 
 class ObsMediaFetchError extends Error {
 	constructor(
@@ -192,7 +191,6 @@ class ObsMediaService {
 	private imageUrlCache = new Map<string, string>();
 	private pendingImageLoads = new Map<string, Promise<string | undefined>>();
 	private failedImageLoads = new Set<string>();
-	private consecutiveFailures = 0;
 	private activeLoadCount = 0;
 	private loadQueue: Array<{
 		cacheKey: string;
@@ -281,7 +279,6 @@ class ObsMediaService {
 		this.imageUrlCache.clear();
 		this.pendingImageLoads.clear();
 		this.failedImageLoads.clear();
-		this.consecutiveFailures = 0;
 		this.obsFetchDisabledReason = undefined;
 		this.drainQueuedLoads();
 	}
@@ -332,7 +329,6 @@ class ObsMediaService {
 
 	resetFetchFailures(): void {
 		this.failedImageLoads.clear();
-		this.consecutiveFailures = 0;
 		this.obsFetchDisabledReason = undefined;
 		this.drainQueuedLoads();
 	}
@@ -404,7 +400,6 @@ class ObsMediaService {
 			.then((url) => {
 				if (url) {
 					this.imageUrlCache.set(cacheKey, url);
-					this.consecutiveFailures = 0;
 				}
 				return url;
 			})
@@ -413,13 +408,6 @@ class ObsMediaService {
 
 				if (!(error instanceof ObsMediaFetchError && error.suppressFollowUpLogs)) {
 					console.warn('Failed to resolve OBS image:', error);
-				}
-
-				this.consecutiveFailures += 1;
-				if (this.consecutiveFailures >= MAX_CONSECUTIVE_FAILURES) {
-					this.disableObsFetching(
-						`OBS image fetching disabled after ${MAX_CONSECUTIVE_FAILURES} consecutive failures.`
-					);
 				}
 
 				return undefined;
@@ -438,7 +426,7 @@ class ObsMediaService {
 		encryptionKey: string,
 		signal?: AbortSignal
 	): Promise<string | undefined> {
-		const url = `${OBS_REMOTE_BASE_URL}${encodeURIComponent(objectId)}`;
+		const url = `${OBS_PROXY_BASE_URL}${encodeURIComponent(objectId)}`;
 
 		const response = await fetch(url, {
 			method: 'GET',
@@ -456,7 +444,7 @@ class ObsMediaService {
 				? `OBS fetch failed with status ${response.status}: ${responseText}`
 				: `OBS fetch failed with status ${response.status}`;
 
-			if (OBS_DISABLE_STATUSES.has(response.status)) {
+			if (OBS_SESSION_DISABLE_STATUSES.has(response.status)) {
 				this.disableObsFetching(
 					`OBS image fetching was disabled for this session after status ${response.status}.`
 				);

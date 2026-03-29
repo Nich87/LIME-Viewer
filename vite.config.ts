@@ -52,6 +52,13 @@ export default defineConfig({
 	},
 	server: {
 		host: true,
-		allowedHosts: ['localhost', '.trycloudflare.com']
+		allowedHosts: ['localhost', '.trycloudflare.com'],
+		proxy: {
+			'/api/obs': {
+				target: 'https://obs.line-apps.com',
+				changeOrigin: true,
+				rewrite: (path) => path.replace(/^\/api\/obs/, '/r/talk/emi')
+			}
+		}
 	}
 });

@@ -1,5 +1,6 @@
 {
 	"name": "throbbing-dew-26b5",
+	"main": "src/worker.ts",
 	"compatibility_date": "2025-12-31",
 	"assets": {
 		"directory": "./build",

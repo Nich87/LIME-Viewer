@@ -1,11 +1,12 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { afterNavigate, pushState, replaceState } from '$app/navigation';
+	import { afterNavigate } from '$app/navigation';
 	import ChatList from '$lib/components/ChatList.svelte';
 	import ChatDetail from '$lib/components/ChatDetail.svelte';
 	import SplashScreen from '$lib/components/SplashScreen.svelte';
 	import FileUpload from '$lib/components/FileUpload.svelte';
 	import type { ChatRoom, Message } from '$lib/schema';
+	import { markShallowRoutingReady, safePushState, safeReplaceState } from '$lib/shallowRouting';
 	import {
 		bubbleAssetService,
 		databaseService,
@@ -30,10 +31,12 @@
 	let initializedHistoryState = false;
 
 	afterNavigate(() => {
+		markShallowRoutingReady();
+
 		if (initializedHistoryState) return;
 		initializedHistoryState = true;
 		if (!history.state?.view) {
-			replaceState('', { view: 'list' });
+			safeReplaceState('', { view: 'list' });
 		}
 	});
 
@@ -169,7 +172,7 @@
 		loadingMessages = true;
 
 		if (isMobile && !isSameChat) {
-			pushState('', { view: 'chat', chatId });
+			safePushState('', { view: 'chat', chatId });
 		}
 
 		try {

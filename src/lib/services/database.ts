@@ -8,6 +8,7 @@ import type { ChatRoom, GlobalMessageSearchResult, Message } from '$lib/schema';
 import { MessageType } from '$lib/schema';
 import { contactsService } from './contacts';
 import { mediaService } from './media';
+import { obsMediaService } from './obsMedia';
 import { bubbleAssetService } from './bubbleAssets';
 import { storageService } from './storage';
 import { determineAttachment, extractMessageRelation } from './messageParser';
@@ -86,6 +87,13 @@ class DatabaseService {
 		return null;
 	}
 
+	private loadObsAccessToken(): void {
+		const row = this.queryRows(
+			"SELECT value FROM setting WHERE key = 'OBS_ENCRYPTED_ACCESS_TOKEN' LIMIT 1"
+		)[0];
+		obsMediaService.setEncryptedAccessToken(this.toString(row?.value) || undefined);
+	}
+
 	private mapMessageRow(rowObj: Record<string, unknown>, fallbackChatId = ''): Message {
 		const fromId = this.toString(rowObj.from_mid);
 		const chatId = this.toString(rowObj.chat_id, fallbackChatId);
@@ -130,6 +138,7 @@ class DatabaseService {
 		this.db = new SQL.Database(new Uint8Array(dbBuffer));
 		this.dbBuffer = dbBuffer;
 		this.initialized = true;
+		this.loadObsAccessToken();
 
 		if (persist) await storageService.saveDatabase(dbBuffer);
 	}

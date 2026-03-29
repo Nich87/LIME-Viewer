@@ -14,6 +14,8 @@
 
 	interface Props {
 		imageUrl: string;
+		isLoading?: boolean;
+		loadFailed?: boolean;
 		senderName?: string;
 		timestamp?: number;
 		onClose: () => void;
@@ -29,6 +31,8 @@
 
 	let {
 		imageUrl,
+		isLoading = false,
+		loadFailed = false,
 		senderName = '',
 		timestamp,
 		onClose,
@@ -61,6 +65,7 @@
 
 	// Fetch blob and use as download link
 	async function downloadImage() {
+		if (!imageUrl) return;
 		try {
 			const response = await fetch(imageUrl);
 			const blob = await response.blob();
@@ -80,6 +85,7 @@
 
 	// Use Web Share API to invoke OS share dialog
 	async function shareImage() {
+		if (!imageUrl) return;
 		try {
 			const response = await fetch(imageUrl);
 			const blob = await response.blob();
@@ -302,23 +308,40 @@
 		{/if}
 
 		<!-- Image -->
-		<img
-			src={imageUrl}
-			alt="プレビュー"
-			class="max-h-full max-w-full object-contain transition-transform duration-100 {isDragging
-				? 'cursor-grabbing'
-				: scale > 1
-					? 'cursor-grab'
-					: 'cursor-zoom-in'}"
-			style="transform: scale({scale}) translate({translateX / scale}px, {translateY / scale}px);"
-			onload={resetZoom}
-			ondblclick={toggleZoom}
-			onpointerdown={handlePointerDown}
-			onpointermove={handlePointerMove}
-			onpointerup={handlePointerUp}
-			onpointercancel={handlePointerUp}
-			draggable="false"
-		/>
+		{#if imageUrl}
+			<img
+				src={imageUrl}
+				alt="プレビュー"
+				class="max-h-full max-w-full object-contain transition-transform duration-100 {isDragging
+					? 'cursor-grabbing'
+					: scale > 1
+						? 'cursor-grab'
+						: 'cursor-zoom-in'}"
+				style="transform: scale({scale}) translate({translateX / scale}px, {translateY / scale}px);"
+				onload={resetZoom}
+				ondblclick={toggleZoom}
+				onpointerdown={handlePointerDown}
+				onpointermove={handlePointerMove}
+				onpointerup={handlePointerUp}
+				onpointercancel={handlePointerUp}
+				draggable="false"
+			/>
+		{:else if isLoading}
+			<div class="flex flex-col items-center justify-center gap-3 text-white/80">
+				<Icon icon="mdi:loading" class="h-10 w-10 animate-spin" />
+				<span class="text-sm">画像を取得中...</span>
+			</div>
+		{:else if loadFailed}
+			<div class="flex flex-col items-center justify-center gap-3 text-white/80">
+				<Icon icon="heroicons:photo-solid" class="h-10 w-10" />
+				<span class="text-sm">画像を取得できません</span>
+			</div>
+		{:else}
+			<div class="flex flex-col items-center justify-center gap-3 text-white/80">
+				<Icon icon="heroicons:photo-solid" class="h-10 w-10" />
+				<span class="text-sm">画像がありません</span>
+			</div>
+		{/if}
 	</div>
 
 	<!-- Footer actions -->

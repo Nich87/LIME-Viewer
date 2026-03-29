@@ -4,6 +4,7 @@
 	import Icon from '@iconify/svelte';
 	import type { ChatRoom, Message } from '$lib/schema';
 	import { createImagePreviewManager } from '$lib/hooks';
+	import { obsMediaService } from '$lib/services';
 	import Avatar from './Avatar.svelte';
 	import MessageBubble from './MessageBubble.svelte';
 	import ImagePreview from './ImagePreview.svelte';
@@ -33,7 +34,11 @@
 	}: Props = $props();
 
 	const imageMessages = $derived(
-		messages.filter((m) => m.attachment?.type === 'image' && m.attachment?.url)
+		messages.filter(
+			(m) =>
+				m.attachment?.type === 'image' &&
+				(Boolean(m.attachment?.url) || obsMediaService.canFetchImage(m))
+		)
 	);
 
 	const imagePreview = createImagePreviewManager(() => imageMessages);
@@ -86,6 +91,7 @@
 	$effect(() => {
 		const _currentChat = chat; // Track as dependency
 		void _currentChat;
+		obsMediaService.resetFetchFailures();
 		shouldScrollBottom = true;
 		showSearch = false;
 		showCalendar = false;
@@ -860,6 +866,8 @@
 {#if imagePreview.isOpen}
 	<ImagePreview
 		imageUrl={imagePreview.currentUrl}
+		isLoading={imagePreview.isLoading}
+		loadFailed={imagePreview.loadFailed}
 		senderName={imagePreview.currentSenderName}
 		timestamp={imagePreview.currentTimestamp}
 		onClose={imagePreview.close}

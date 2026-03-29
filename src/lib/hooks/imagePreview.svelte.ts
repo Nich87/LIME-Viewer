@@ -1,5 +1,6 @@
-import { pushState } from '$app/navigation';
 import type { Message } from '$lib/schema';
+import { obsMediaService } from '$lib/services';
+import { safePushState } from '$lib/shallowRouting';
 
 export interface PreviewImageInfo {
 	url: string;
@@ -10,6 +11,8 @@ export interface PreviewImageInfo {
 export interface ImagePreviewState {
 	isOpen: boolean;
 	currentUrl: string;
+	isLoading: boolean;
+	loadFailed: boolean;
 	currentSenderName: string;
 	currentTimestamp: number | undefined;
 	currentIndex: number;
@@ -18,33 +21,53 @@ export interface ImagePreviewState {
 export function createImagePreviewManager(getImageMessages: () => Message[]) {
 	let isOpen = $state(false);
 	let currentUrl = $state('');
+	let isLoading = $state(false);
+	let loadFailed = $state(false);
 	let currentSenderName = $state('');
 	let currentTimestamp = $state<number | undefined>(undefined);
 	let currentIndex = $state(0);
 
+	function setCurrentMessageState(message: Message, index: number) {
+		currentUrl = message.attachment?.url || obsMediaService.getCachedImageUrl(message) || '';
+		isLoading = !currentUrl && obsMediaService.canFetchImage(message);
+		loadFailed = !currentUrl && !isLoading;
+		currentSenderName = message.fromName || '';
+		currentTimestamp = message.timestamp;
+		currentIndex = index;
+	}
+
+	function resolveImageUrl(message: Message, index: number) {
+		if (!obsMediaService.canFetchImage(message)) return;
+
+		void obsMediaService.resolveImageUrl(message).then((url) => {
+			if (currentIndex !== index || getImageMessages()[index]?.id !== message.id) return;
+
+			currentUrl = url || '';
+			isLoading = false;
+			loadFailed = !url;
+		});
+	}
+
 	function updateStateFromIndex(index: number) {
 		const imageMessages = getImageMessages();
 		const msg = imageMessages[index];
-		if (msg?.attachment?.url) {
-			currentUrl = msg.attachment.url;
-			currentSenderName = msg.fromName || '';
-			currentTimestamp = msg.timestamp;
-			currentIndex = index;
-		}
+		if (!msg || msg.attachment?.type !== 'image') return;
+
+		setCurrentMessageState(msg, index);
+		resolveImageUrl(msg, index);
 	}
 
 	function open(message: Message) {
-		if (message.attachment?.type !== 'image' || !message.attachment?.url) return;
+		if (message.attachment?.type !== 'image') return;
 
 		const imageMessages = getImageMessages();
 		const idx = imageMessages.findIndex((m) => m.id === message.id);
+		const resolvedIndex = idx >= 0 ? idx : 0;
 
-		currentUrl = message.attachment.url;
-		currentSenderName = message.fromName || '';
-		currentTimestamp = message.timestamp;
-		currentIndex = idx >= 0 ? idx : 0;
+		setCurrentMessageState(message, resolvedIndex);
+		resolveImageUrl(message, resolvedIndex);
 
-		pushState('', { imagePreview: true, view: 'chat' });
+		safePushState('', { imagePreview: true, view: 'chat' });
 		isOpen = true;
 	}
 
@@ -86,7 +109,7 @@ export function createImagePreviewManager(getImageMessages: () => Message[]) {
 
 	function getAllImageInfos(): PreviewImageInfo[] {
 		return getImageMessages().map((m) => ({
-			url: m.attachment?.url || '',
+			url: m.attachment?.url || obsMediaService.getCachedImageUrl(m) || '',
 			senderName: m.fromName || '',
 			timestamp: m.timestamp
 		}));
@@ -98,6 +121,12 @@ export function createImagePreviewManager(getImageMessages: () => Message[]) {
 		},
 		get currentUrl() {
 			return currentUrl;
+		},
+		get isLoading() {
+			return isLoading;
+		},
+		get loadFailed() {
+			return loadFailed;
 		},
 		get currentSenderName() {
 			return currentSenderName;

@@ -5,7 +5,11 @@ declare global {
 		// interface Error {}
 		// interface Locals {}
 		// interface PageData {}
-		// interface PageState {}
+		interface PageState {
+			view?: 'list' | 'chat';
+			chatId?: string;
+			imagePreview?: boolean;
+		}
 		// interface Platform {}
 	}
 }

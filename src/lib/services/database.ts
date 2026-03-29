@@ -11,7 +11,7 @@ import { mediaService } from './media';
 import { bubbleAssetService } from './bubbleAssets';
 import { storageService } from './storage';
 import { determineAttachment, extractMessageRelation } from './messageParser';
-import { getLineGroupImageUrl, getLineProfileImageUrl } from '$lib/utils';
+import { getLineCdnImageUrl, getLineGroupImageUrl, getLineProfileImageUrl } from '$lib/utils';
 
 export class DatabaseError extends Error {
 	constructor(
@@ -163,13 +163,16 @@ class DatabaseService {
 		`);
 		if (rows.length === 0) return [];
 
-		const groupsMap = new Map<string, string>();
+		const groupsMap = new Map<string, { name: string; pictureStatus?: string }>();
 		try {
-			const groupRows = this.queryRows('SELECT id, name FROM groups');
+			const groupRows = this.queryRows('SELECT id, name, picture_status FROM groups');
 			for (const rowObj of groupRows) {
 				const groupId = this.toString(rowObj.id);
 				if (!groupId) continue;
-				groupsMap.set(groupId, this.toString(rowObj.name, groupId));
+				groupsMap.set(groupId, {
+					name: this.toString(rowObj.name, groupId),
+					pictureStatus: this.toString(rowObj.picture_status) || undefined
+				});
 			}
 		} catch (error) {
 			console.warn('Failed to load groups table:', error);
@@ -195,6 +198,7 @@ class DatabaseService {
 			if (!chatId) continue;
 
 			const isGroup = groupsMap.has(chatId);
+			const groupInfo = groupsMap.get(chatId);
 			const isKeepMemo = keepMemoChatIds.has(chatId);
 			const partnerMid = this.toString(rowObj.mid_p);
 			const messageCount = this.toNumber(rowObj.message_count);
@@ -205,7 +209,7 @@ class DatabaseService {
 			if (isKeepMemo) {
 				name = 'Keepメモ';
 			} else if (isGroup) {
-				name = groupsMap.get(chatId) ?? name;
+				name = groupInfo?.name ?? name;
 			} else if (!name) {
 				const contactName = contactsService.getContactName(chatId);
 				if (contactName) {
@@ -225,7 +229,7 @@ class DatabaseService {
 				unreadCount,
 				isGroup: isGroup,
 				avatarUrl: isGroup
-					? getLineGroupImageUrl(chatId)
+					? (getLineCdnImageUrl(groupInfo?.pictureStatus) ?? getLineGroupImageUrl(chatId))
 					: getLineProfileImageUrl(partnerMid || chatId),
 				notificationDisabled: this.toNumber(rowObj.is_notification, 1) === 0
 			});

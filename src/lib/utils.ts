@@ -1,5 +1,12 @@
 export const BUBBLE_BASE_STYLE = 'relative rounded-[17px]';
 
+const LINE_IMAGE_HOSTS = new Set([
+	'obs.line-apps.com',
+	'obs.line-scdn.net',
+	'profile.line-scdn.net',
+	'poll-obs.line-scdn.net'
+]);
+
 /**
  * Get bubble style by sender (self/recipient)
  * @param isMe -whether this is your message
@@ -86,6 +93,31 @@ function normalizeLineAvatarId(value?: string | null): string | undefined {
 	const normalized = value?.trim();
 	if (!normalized) return undefined;
 	return normalized;
+}
+
+/**
+ * Build a LINE CDN image URL from either a full URL or a raw `/0h...` style path.
+ * Returns undefined when the source value is empty or does not look like a LINE CDN image path.
+ */
+export function getLineCdnImageUrl(pathOrUrl?: string | null): string | undefined {
+	const normalized = pathOrUrl?.trim();
+	if (!normalized) return undefined;
+
+	try {
+		const url = new URL(normalized);
+		return LINE_IMAGE_HOSTS.has(url.hostname) ? url.toString() : undefined;
+	} catch {
+		// Raw path handling below.
+	}
+
+	const path = normalized.replace(/^\/+/, '');
+	if (!path) return undefined;
+
+	if (!path.startsWith('0h') && !path.startsWith('os/') && !path.startsWith('r/')) {
+		return undefined;
+	}
+
+	return `https://obs.line-apps.com/${path}`;
 }
 
 /**

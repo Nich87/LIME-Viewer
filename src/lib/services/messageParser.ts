@@ -5,6 +5,7 @@
 
 import type { Message } from '$lib/schema';
 import { MessageType, AttachmentType } from '$lib/schema';
+import { getLineCdnImageUrl } from '$lib/utils';
 import { contactsService } from './contacts';
 import { mediaService } from './media';
 
@@ -87,6 +88,24 @@ function getMediaAssetInfo(params: Record<string, string>) {
 		serviceId: params['SID'] || undefined,
 		encryptionKey: params['ENC_KM'] || undefined
 	};
+}
+
+function getStringValue(value: unknown): string | undefined {
+	if (typeof value !== 'string') return undefined;
+	const normalized = value.trim();
+	return normalized || undefined;
+}
+
+function getImageCdnFallbackUrl(ctx: AttachmentContext): string | undefined {
+	const localUri = getLineCdnImageUrl(getStringValue(ctx.msg.attachement_local_uri));
+	if (localUri) return localUri;
+
+	for (const value of Object.values(ctx.params)) {
+		const url = getLineCdnImageUrl(value);
+		if (url) return url;
+	}
+
+	return undefined;
 }
 
 function parseOptionalBoolean(value: string | undefined): boolean | undefined {
@@ -213,9 +232,12 @@ function handleVoiceMessage(ctx: AttachmentContext): Message['attachment'] {
 }
 
 function handleImage(ctx: AttachmentContext): Message['attachment'] {
+	const localUrl = mediaService.getMediaUrl(ctx.chatId, String(ctx.messageId));
+	const cdnUrl = getImageCdnFallbackUrl(ctx);
+
 	return {
 		type: 'image',
-		url: mediaService.getMediaUrl(ctx.chatId, String(ctx.messageId)),
+		url: localUrl ?? cdnUrl,
 		image: {
 			width: toOptionalNumber(ctx.msg.attachement_image_width),
 			height: toOptionalNumber(ctx.msg.attachement_image_height),

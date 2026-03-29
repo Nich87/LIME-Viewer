@@ -2,6 +2,7 @@
 	import { browser } from '$app/environment';
 	import Icon from '@iconify/svelte';
 	import type { ChatRoom } from '$lib/schema';
+	import Avatar from './Avatar.svelte';
 	import ExportAllModal from './modals/ExportAllModal.svelte';
 	import ChatGlobalSearchPanel from './ChatGlobalSearchPanel.svelte';
 
@@ -210,15 +211,7 @@
 						: ''} flex w-full items-center gap-3 rounded-[20px] px-3 py-3 text-left"
 					onclick={() => selectChat(chat.id)}
 				>
-					<div
-						class="flex h-13 w-13 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[#d9dde4] text-sm font-semibold text-[--line-text-subtle]"
-					>
-						{#if chat.avatarUrl}
-							<img src={chat.avatarUrl} alt={chat.name} class="h-full w-full object-cover" />
-						{:else}
-							{chat.name.slice(0, 1)}
-						{/if}
-					</div>
+					<Avatar name={chat.name} src={chat.avatarUrl} class="h-13 w-13 shrink-0 bg-[#d9dde4]" />
 
 					<div class="min-w-0 flex-1">
 						<div class="flex items-start justify-between gap-3">

@@ -83,6 +83,16 @@ export function formatCallDuration(durationMs: number): string {
 }
 
 /**
+ * Build LINE profile image URL from MID/chat ID.
+ * Returns undefined when the source value is empty.
+ */
+export function getLineProfileImageUrl(mid?: string | null): string | undefined {
+	const normalized = mid?.trim();
+	if (!normalized) return undefined;
+	return `https://obs.line-apps.com/r/talk/p/${encodeURIComponent(normalized)}`;
+}
+
+/**
  * Generate Google Maps URL
  * @param lat - Latitude
  * @param lng - Longitude

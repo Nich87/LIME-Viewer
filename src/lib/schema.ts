@@ -469,6 +469,7 @@ export interface Message {
 	chatId: string;
 	fromId: string; // Member ID
 	fromName?: string; // Resolved display name
+	avatarUrl?: string; // Resolved profile image URL for the sender
 	content: string | null;
 	timestamp: number;
 	isMe: boolean; // Whether sent by the user
@@ -567,4 +568,5 @@ export interface GlobalMessageSearchResult {
 	timestamp: number;
 	fromId: string;
 	fromName?: string;
+	avatarUrl?: string;
 }

@@ -4,6 +4,7 @@
 	import Icon from '@iconify/svelte';
 	import type { ChatRoom, GlobalMessageSearchResult } from '$lib/schema';
 	import { databaseService } from '$lib/services';
+	import Avatar from './Avatar.svelte';
 
 	interface Props {
 		chats: ChatRoom[];
@@ -424,24 +425,33 @@
 							class="w-full border-b border-[--line-border] px-4 py-3 text-left transition-colors hover:bg-[--line-surface-press]"
 							onclick={() => handleSelectMessageResult(result)}
 						>
-							<div class="mb-1 flex items-start justify-between gap-2">
-								<p class="min-w-0 truncate text-sm font-semibold text-[--line-text]">
-									{getChatName(result.chatId)}
-								</p>
-								<span class="shrink-0 text-xs text-[--line-text-faint]"
-									>{formatResultDate(result.timestamp)}</span
-								>
+							<div class="flex items-start gap-3">
+								<Avatar
+									name={getSenderName(result)}
+									src={result.avatarUrl}
+									class="mt-0.5 h-10 w-10 shrink-0"
+								/>
+								<div class="min-w-0 flex-1">
+									<div class="mb-1 flex items-start justify-between gap-2">
+										<p class="min-w-0 truncate text-sm font-semibold text-[--line-text]">
+											{getChatName(result.chatId)}
+										</p>
+										<span class="shrink-0 text-xs text-[--line-text-faint]"
+											>{formatResultDate(result.timestamp)}</span
+										>
+									</div>
+									<p class="truncate text-xs text-[--line-text-soft]">
+										{getSenderName(result)}
+									</p>
+									<p class="mt-1 line-clamp-2 text-sm text-[--line-text-subtle]">
+										{#each buildHighlightParts(getMessagePreview(result.content), normalizedQuery) as part, i (i)}
+											<span class={part.matched ? 'font-semibold text-[--line-brand]' : ''}>
+												{part.text}
+											</span>
+										{/each}
+									</p>
+								</div>
 							</div>
-							<p class="truncate text-xs text-[--line-text-soft]">
-								{getSenderName(result)}
-							</p>
-							<p class="mt-1 line-clamp-2 text-sm text-[--line-text-subtle]">
-								{#each buildHighlightParts(getMessagePreview(result.content), normalizedQuery) as part, i (i)}
-									<span class={part.matched ? 'font-semibold text-[--line-brand]' : ''}>
-										{part.text}
-									</span>
-								{/each}
-							</p>
 						</button>
 					{/each}
 				{/if}
@@ -459,15 +469,7 @@
 							class="flex w-full items-center gap-3 border-b border-[--line-border] px-4 py-3 text-left transition-colors hover:bg-[--line-surface-press]"
 							onclick={() => handleSelectChat(chat.id)}
 						>
-							<div
-								class="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[#dde2ea] text-sm font-bold text-[--line-text-subtle]"
-							>
-								{#if chat.avatarUrl}
-									<img src={chat.avatarUrl} alt={chat.name} class="h-full w-full object-cover" />
-								{:else}
-									{chat.name.slice(0, 1)}
-								{/if}
-							</div>
+							<Avatar name={chat.name} src={chat.avatarUrl} class="h-11 w-11 shrink-0" />
 
 							<div class="min-w-0 flex-1">
 								<div class="mb-0.5 flex items-baseline justify-between gap-2">

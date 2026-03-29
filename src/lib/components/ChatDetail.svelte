@@ -4,6 +4,7 @@
 	import Icon from '@iconify/svelte';
 	import type { ChatRoom, Message } from '$lib/schema';
 	import { createImagePreviewManager } from '$lib/hooks';
+	import Avatar from './Avatar.svelte';
 	import MessageBubble from './MessageBubble.svelte';
 	import ImagePreview from './ImagePreview.svelte';
 	import SearchPanel from './SearchPanel.svelte';
@@ -616,6 +617,7 @@
 					<Icon icon="mdi:chevron-left" class="h-6 w-6" />
 				</button>
 			{/if}
+			<Avatar name={chat.name} src={chat.avatarUrl} class="mr-3 h-10 w-10 shrink-0" />
 			<div class="min-w-0">
 				<h2 class="truncate text-[16px] font-semibold text-[--line-text]">{chat.name}</h2>
 				{#if chat.memberCount}

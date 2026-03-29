@@ -11,6 +11,7 @@ import { mediaService } from './media';
 import { bubbleAssetService } from './bubbleAssets';
 import { storageService } from './storage';
 import { determineAttachment, extractMessageRelation } from './messageParser';
+import { getLineProfileImageUrl } from '$lib/utils';
 
 export class DatabaseError extends Error {
 	constructor(
@@ -106,6 +107,7 @@ class DatabaseService {
 			chatId,
 			fromId: fromId || '',
 			fromName,
+			avatarUrl: isMe ? undefined : getLineProfileImageUrl(fromId),
 			content: resolvedContent,
 			timestamp: this.toNumber(rowObj.created_time),
 			isMe,
@@ -155,7 +157,7 @@ class DatabaseService {
 		// NOTE: sql.js 1.14 browser build can return undefined `columns` from `exec()`.
 		// Use `prepare()+getAsObject()` for stable row shape across versions.
 		const rows = this.queryRows(`
-			SELECT chat_id, chat_name, input_text, last_message, last_created_time
+			SELECT chat_id, chat_name, mid_p, input_text, last_message, last_created_time
 			FROM chat
 			ORDER BY last_created_time DESC
 		`);
@@ -194,6 +196,7 @@ class DatabaseService {
 
 			const isGroup = groupsMap.has(chatId);
 			const isKeepMemo = keepMemoChatIds.has(chatId);
+			const partnerMid = this.toString(rowObj.mid_p);
 			let name = this.toString(rowObj.chat_name);
 
 			if (isKeepMemo) {
@@ -218,7 +221,7 @@ class DatabaseService {
 				lastMessageTime: this.toNumber(rowObj.last_created_time),
 				unreadCount: 0,
 				isGroup: isGroup,
-				avatarUrl: undefined
+				avatarUrl: getLineProfileImageUrl(isGroup ? chatId : partnerMid || chatId)
 			});
 		}
 
@@ -280,7 +283,8 @@ class DatabaseService {
 				content: this.toString(rowObj.content),
 				timestamp: this.toNumber(rowObj.created_time),
 				fromId: fromId || '',
-				fromName: fromId ? contactsService.getContactName(fromId) : undefined
+				fromName: fromId ? contactsService.getContactName(fromId) : undefined,
+				avatarUrl: fromId ? getLineProfileImageUrl(fromId) : undefined
 			};
 		});
 	}

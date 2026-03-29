@@ -2,6 +2,7 @@
 	import { onMount, onDestroy } from 'svelte';
 	import Icon from '@iconify/svelte';
 	import type { Message } from '$lib/schema';
+	import Avatar from './Avatar.svelte';
 
 	interface Props {
 		messages: Message[];
@@ -124,10 +125,6 @@
 	function getSenderName(message: Message): string {
 		if (message.isMe) return '自分';
 		return message.fromName || message.fromId || '不明';
-	}
-
-	function getAvatarText(message: Message): string {
-		return getSenderName(message).slice(0, 1).toUpperCase();
 	}
 
 	function escapeRegExp(value: string): string {
@@ -286,11 +283,11 @@
 							}`}
 							onclick={() => selectSearchResult(result.id)}
 						>
-							<div
-								class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#dde2ea] text-sm font-semibold text-[--line-text-subtle]"
-							>
-								{getAvatarText(result)}
-							</div>
+							<Avatar
+								name={getSenderName(result)}
+								src={result.avatarUrl}
+								class="h-10 w-10 shrink-0"
+							/>
 
 							<div class="min-w-0 flex-1">
 								<div class="flex items-start justify-between gap-3">
